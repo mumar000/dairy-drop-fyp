@@ -14,11 +14,18 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({ url: '/auth/me' }),
       providesTags: ['Me'],
     }),
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: "/auth/me",
+        method: "PATCH",
+        body: data
+      }),
+      invalidatesTags: ["Me"]
+    }),
     changePassword: builder.mutation({
       query: (data) => ({ url: '/auth/change-password', method: 'POST', body: data }),
     }),
   }),
 })
 
-export const { useRegisterMutation, useLoginMutation, useMeQuery, useChangePasswordMutation } = authApi
-
+export const { useRegisterMutation, useLoginMutation, useMeQuery, useUpdateProfileMutation, useChangePasswordMutation } = authApi
