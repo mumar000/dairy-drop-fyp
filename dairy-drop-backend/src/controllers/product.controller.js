@@ -41,3 +41,8 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   if (!product) return res.status(404).json({ message: 'Product not found' });
   res.json({ message: 'Product deleted' });
 });
+
+export const listCategories = asyncHandler(async (req, res) => {
+  const categories = await Product.distinct('category', { isActive: true });
+  res.json({ categories });
+});

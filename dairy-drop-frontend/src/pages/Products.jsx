@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useListProductsQuery } from '../api/productsApi.js'
 import { Sidebar } from '../components/Products/Sidebar'
 import { ProductCard } from '../components/Products/ProductCard'
 import { Pagination } from '../components/Products/Pagination'
+import { useState } from 'react'
 
 const Products = () => {
     const [filters, setFilters] = useState({
@@ -12,20 +13,26 @@ const Products = () => {
         inStockOnly: false
     })
 
-    const [sortBy, setSortBy] = useState('featured')
+    const [sortBy, setSortBy] = useState('-createdAt')
     const [currentPage, setCurrentPage] = useState(1)
+    const [limit] = useState(12)
 
-    // Sample products data
-    const allProducts = [
-        { id: 1, name: 'Organic Whole Milk', category: 'Milk', price: 4.99, rating: 4.8, stock: 45, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80', brand: 'Dairy Drop' },
-        { id: 2, name: 'Greek Yogurt', category: 'Yogurt', price: 3.49, rating: 4.9, stock: 32, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80', brand: 'Farm Fresh' },
-        { id: 3, name: 'Aged Cheddar', category: 'Cheese', price: 7.99, rating: 4.7, stock: 18, image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&q=80', brand: 'Organic Valley' },
-        { id: 4, name: 'Fresh Butter', category: 'Butter', price: 5.49, rating: 4.6, stock: 28, image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&q=80', brand: 'Local Farms' },
-        { id: 5, name: 'Mozzarella', category: 'Cheese', price: 6.99, rating: 4.9, stock: 12, image: 'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=400&q=80', brand: 'Dairy Drop' },
-        { id: 6, name: 'Almond Milk', category: 'Specialty', price: 5.99, rating: 4.5, stock: 40, image: 'https://images.unsplash.com/photo-1626196340104-2d6769a08761?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YWxtb25kJTIwbWlsa3xlbnwwfHwwfHx8MA%3D%3D', brand: 'Organic Valley' },
-        { id: 7, name: 'Cottage Cheese', category: 'Cheese', price: 4.49, rating: 4.4, stock: 25, image: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=400&q=80', brand: 'Farm Fresh' },
-        { id: 8, name: 'Sour Cream', category: 'Specialty', price: 3.99, rating: 4.6, stock: 35, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=400&q=80', brand: 'Local Farms' },
-    ]
+    // Convert our filters to API query parameters
+    const queryParams = {
+        page: currentPage,
+        limit: limit,
+        sort: sortBy,
+        category: filters.categories.length > 0 ? filters.categories.join(',') : undefined,
+        minPrice: filters.priceRange.min || undefined,
+        maxPrice: filters.priceRange.max || undefined,
+        inStock: filters.inStockOnly ? 1 : undefined,
+    }
+
+    const { data, isLoading, isError, error, refetch } = useListProductsQuery(queryParams)
+
+    const products = data?.items || []
+    const totalProducts = data?.total || 0
+    const totalPages = data?.pages || 1
 
     const handleClearAll = () => {
         setFilters({
@@ -41,6 +48,12 @@ const Products = () => {
         console.log('Added to cart:', product)
     }
 
+    // Handle sort changes
+    const handleSortChange = (value) => {
+        setSortBy(value)
+        setCurrentPage(1)
+    }
+
     return (
         <div className='bg-gray-50 min-h-screen py-8'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -48,7 +61,9 @@ const Products = () => {
                 {/* Header */}
                 <div className='mb-8'>
                     <h1 className='text-4xl font-bold text-gray-900 mb-2'>All Products</h1>
-                    <p className='text-gray-600'>Showing {allProducts.length} products</p>
+                    <p className='text-gray-600'>
+                        {isLoading ? 'Loading products...' : `Showing ${products.length} of ${totalProducts} products`}
+                    </p>
                 </div>
 
                 <div className='flex gap-8'>
@@ -68,34 +83,85 @@ const Products = () => {
                             <span className='text-gray-700 font-medium'>Sort by:</span>
                             <select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
+                                onChange={(e) => handleSortChange(e.target.value)}
                                 className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none'
                             >
-                                <option value='featured'>Featured</option>
-                                <option value='price-low'>Price: Low to High</option>
-                                <option value='price-high'>Price: High to Low</option>
-                                <option value='rating'>Highest Rated</option>
-                                <option value='newest'>Newest</option>
+                                <option value='-createdAt'>Newest</option>
+                                <option value='name'>Name A-Z</option>
+                                <option value='-name'>Name Z-A</option>
+                                <option value='price'>Price: Low to High</option>
+                                <option value='-price'>Price: High to Low</option>
+                                <option value='averageRating'>Highest Rated</option>
                             </select>
                         </div>
 
-                        {/* Product Grid */}
-                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                            {allProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                    onAddToCart={handleAddToCart}
-                                />
-                            ))}
-                        </div>
+                        {/* Loading State */}
+                        {isLoading && (
+                            <div className='flex justify-center items-center h-64'>
+                                <div className='text-lg text-gray-600'>Loading products...</div>
+                            </div>
+                        )}
 
-                        {/* Pagination */}
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={3}
-                            onPageChange={setCurrentPage}
-                        />
+                        {/* Error State */}
+                        {isError && (
+                            <div className='flex justify-center items-center h-64'>
+                                <div className='text-lg text-red-600'>
+                                    Error loading products: {error?.data?.message || error?.error || 'Unknown error'}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Product Grid */}
+                        {!isLoading && !isError && (
+                            <>
+                                {products.length > 0 ? (
+                                    <>
+                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+                                            {products.map((product, index) => (
+                                                <ProductCard
+                                                    key={product._id}
+                                                    product={product}
+                                                    index={index}
+                                                    onAddToCart={handleAddToCart}
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {/* Pagination */}
+                                        {totalPages > 1 && (
+                                            <Pagination
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={setCurrentPage}
+                                            />
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className='flex flex-col items-center justify-center py-20'>
+                                        <div className='text-center'>
+                                            <h3 className='text-2xl font-bold text-gray-900 mb-2'>No products found</h3>
+                                            <p className='text-gray-600 mb-6'>We couldn't find any products matching your search criteria.</p>
+                                            <button
+                                                onClick={() => {
+                                                    setFilters({
+                                                        categories: [],
+                                                        priceRange: { min: '', max: '' },
+                                                        brands: [],
+                                                        ratings: [],
+                                                        inStockOnly: false
+                                                    });
+                                                    setSortBy('-createdAt');
+                                                    setCurrentPage(1);
+                                                }}
+                                                className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                                            >
+                                                Clear all filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

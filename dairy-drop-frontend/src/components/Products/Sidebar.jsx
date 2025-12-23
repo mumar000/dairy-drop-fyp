@@ -1,5 +1,5 @@
 export const Sidebar = ({ filters, setFilters, onClearAll }) => {
-    const categories = ['Milk', 'Yogurt', 'Cheese', 'Butter', 'Specialty']
+    const categories = ['Milk', 'Yogurt', 'Cheese', 'Butter', 'Ghee']
     const brands = ['Dairy Drop', 'Farm Fresh', 'Organic Valley', 'Local Farms']
 
     return (
@@ -37,7 +37,7 @@ export const Sidebar = ({ filters, setFilters, onClearAll }) => {
                                         })
                                     }
                                 }}
-                                className='w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
+                                className='w-4 h-4 text-blue-600 rounded cursor-pointer'
                             />
                             <span className='ml-3 text-gray-700 group-hover:text-gray-900'>{category}</span>
                         </label>
@@ -96,7 +96,7 @@ export const Sidebar = ({ filters, setFilters, onClearAll }) => {
                                         })
                                     }
                                 }}
-                                className='w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
+                                className='w-4 h-4 text-blue-600 rounded cursor-pointer'
                             />
                             <span className='ml-3 text-gray-700 group-hover:text-gray-900'>{brand}</span>
                         </label>
@@ -126,7 +126,7 @@ export const Sidebar = ({ filters, setFilters, onClearAll }) => {
                                         })
                                     }
                                 }}
-                                className='w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
+                                className='w-4 h-4 text-blue-600 rounded cursor-pointer'
                             />
                             <div className='ml-3 flex items-center'>
                                 <span className='text-yellow-500 mr-1'>★</span>
@@ -145,7 +145,7 @@ export const Sidebar = ({ filters, setFilters, onClearAll }) => {
                         type='checkbox'
                         checked={filters.inStockOnly}
                         onChange={(e) => setFilters({ ...filters, inStockOnly: e.target.checked })}
-                        className='w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
+                        className='w-4 h-4 text-blue-600 rounded cursor-pointer'
                     />
                     <span className='ml-3 text-gray-700 group-hover:text-gray-900'>In Stock Only</span>
                 </label>

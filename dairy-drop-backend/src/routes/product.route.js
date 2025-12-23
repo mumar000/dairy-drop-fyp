@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { createProduct, listProducts, getProduct, updateProduct, deleteProduct } from '../controllers/product.controller.js';
+import { createProduct, listProducts, getProduct, updateProduct, deleteProduct, listCategories } from '../controllers/product.controller.js';
 
 const router = Router();
 
+// Specific routes should be defined before dynamic routes
 router.get('/', listProducts);
+router.get('/categories', listCategories);
 router.get('/:id', getProduct);
 
 router.post('/', authenticate, authorize('admin'), createProduct);
