@@ -25,7 +25,49 @@ export const authApi = baseApi.injectEndpoints({
     changePassword: builder.mutation({
       query: (data) => ({ url: '/auth/change-password', method: 'POST', body: data }),
     }),
+    getUser: builder.query({
+      query: () => ({ url: '/auth/me' }),
+      providesTags: ['Me'],
+    }),
+    listAddresses: builder.query({
+      query: () => ({ url: '/auth/addresses' }),
+      providesTags: ['Me'],
+    }),
+    addAddress: builder.mutation({
+      query: (data) => ({
+        url: '/auth/addresses',
+        method: 'POST',
+        body: data
+      }),
+      invalidatesTags: ['Me'],
+    }),
+    updateAddress: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/auth/addresses/${id}`,
+        method: 'PATCH',
+        body: data
+      }),
+      invalidatesTags: ['Me'],
+    }),
+    deleteAddress: builder.mutation({
+      query: (id) => ({
+        url: `/auth/addresses/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Me'],
+    }),
   }),
 })
 
-export const { useRegisterMutation, useLoginMutation, useMeQuery, useUpdateProfileMutation, useChangePasswordMutation } = authApi
+export const {
+  useRegisterMutation,
+  useLoginMutation,
+  useMeQuery,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
+  useGetUserQuery,
+  useListAddressesQuery,
+  useAddAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+} = authApi

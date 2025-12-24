@@ -122,7 +122,8 @@ const Categories = () => {
               return (
                 <Link
                   key={categoryName}
-                  to={`/products?category=${encodeURIComponent(normalizedCategory)}`}
+                  to={`/products?category=${encodeURIComponent(categoryName)}`}
+                  onClick={() => { window.scrollTo(0, 0) }}
                   className={`group ${config.bgColor} ${config.hoverColor} rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105`}
                 >
                   {/* Image */}

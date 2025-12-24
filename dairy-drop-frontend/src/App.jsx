@@ -16,35 +16,47 @@ import Contact from './pages/Contact.jsx'
 import Products from './pages/Products.jsx'
 import Profile from './pages/Profile.jsx'
 import Register from './pages/Register.jsx'
+import Checkout from './pages/Checkout.jsx'
+import Orders from './pages/Orders.jsx'
+import ProductDetails from './pages/ProductDetails.jsx'
 
 export default function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Toaster position="bottom-right" richColors={true}/>
+        <Toaster position="bottom-right" richColors={true} />
 
         <NavBar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />}/>
-          <Route path='/contact' element={<Contact />}/>
+          <Route path="/about" element={<About />} />
+          <Route path='/contact' element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path='/register' element={<Register />}/>
-          <Route path='/products' element={<Products />}/>
-          <Route path='/profile' element={<Profile />}/>
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                {/* <Orders /> */}
-              </ProtectedRoute>
-            }
-          />
+          <Route path='/register' element={<Register />} />
+          <Route path='/products' element={<Products />} />
+          <Route path='/profile' element={<Profile />} />
+          <Route path='/products/:productId' element={<ProductDetails />} />
           <Route
             path="/cart"
             element={
               <ProtectedRoute>
                 {<Cart />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                {<Checkout />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                {<Orders />}
               </ProtectedRoute>
             }
           />

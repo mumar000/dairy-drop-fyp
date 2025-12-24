@@ -1,55 +1,59 @@
-import { useState } from 'react';
+import { useGetCartQuery, useUpdateCartItemMutation, useRemoveCartItemMutation } from '../api/cartApi.js';
+import { useGetProductQuery } from '../api/productsApi.js';
 import CartItem from '../components/Cart/CartItem';
 import CartSummary from '../components/Cart/CartSummary';
+import { toast } from 'sonner';
 
 const Cart = () => {
-    // Static cart data for now - this will be replaced with actual state later
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: 'Fresh Cow Milk 1L',
-            price: 2.49,
-            quantity: 2,
-            image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=1000&q=100',
-            inStock: 500
-        },
-        {
-            id: 2,
-            name: 'Desi Ghee 500g',
-            price: 7.99,
-            quantity: 1,
-            image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=1000&q=100',
-            inStock: 200
-        },
-        {
-            id: 3,
-            name: 'Yogurt 500g',
-            price: 1.99,
-            quantity: 3,
-            image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=1000&q=100',
-            inStock: 400
-        }
-    ]);
+    const { data: cartItems = [], isLoading, isError, refetch } = useGetCartQuery();
+    const [updateCartItem] = useUpdateCartItemMutation();
+    const [removeCartItem] = useRemoveCartItemMutation();
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = 4.99;
+    const shipping = cartItems.length === 0 ? 0 : 4.99;
     const tax = subtotal * 0.08;
     const total = subtotal + shipping + tax;
 
-    const updateQuantity = (id, newQuantity) => {
+    const updateQuantity = async (productId, newQuantity) => {
         if (newQuantity <= 0) {
-            setCartItems(cartItems.filter(item => item.id !== id));
+            await removeFromCartItem(productId);
         } else {
-            setCartItems(cartItems.map(item =>
-                item.id === id ? { ...item, quantity: newQuantity } : item
-            ));
+            try {
+                await updateCartItem({ productId, quantity: newQuantity }).unwrap();
+                toast.success('Cart updated successfully');
+            } catch (error) {
+                console.error('Error updating cart:', error);
+                toast.error('Failed to update cart item');
+            }
         }
     };
 
-    const removeFromCart = (id) => {
-        setCartItems(cartItems.filter(item => item.id !== id));
+    const removeFromCartItem = async (productId) => {
+        try {
+            await removeCartItem(productId).unwrap();
+            toast.success('Item removed from cart');
+        } catch (error) {
+            console.error('Error removing item from cart:', error);
+            toast.error('Failed to remove item from cart');
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-lg text-gray-600">Loading cart...</div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-lg text-red-600">Error loading cart</div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -67,10 +71,10 @@ const Cart = () => {
                             <div className="space-y-4">
                                 {cartItems.map((item) => (
                                     <CartItem
-                                        key={item.id}
+                                        key={item.product}
                                         item={item}
                                         onUpdateQuantity={updateQuantity}
-                                        onRemoveFromCart={removeFromCart}
+                                        onRemoveFromCart={removeFromCartItem}
                                     />
                                 ))}
                             </div>
