@@ -6,7 +6,7 @@ import { Product } from '../models/product.model.js';
 
 export const placeOrder = asyncHandler(async (req, res) => {
   const { address, items, fromCart } = placeOrderSchema.parse(req.body);
-  const user = await User.findById(req.user!.id);
+  const user = await User.findById(req.user._id);
   if (!user) return res.status(404).json({ message: 'User not found' });
 
   let orderItems: { product: any; name: string; price: number; quantity: number }[] = [];
@@ -61,12 +61,12 @@ export const placeOrder = asyncHandler(async (req, res) => {
 });
 
 export const myOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user!.id }).sort('-createdAt');
+  const orders = await Order.find({ user: req.user._id }).sort('-createdAt');
   res.json({ orders });
 });
 
 export const getOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findOne({ _id: req.params.id, user: req.user!.id });
+  const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
   if (!order) return res.status(404).json({ message: 'Order not found' });
   res.json({ order });
 });
@@ -87,7 +87,7 @@ export const adminUpdateStatus = asyncHandler(async (req, res) => {
 });
 
 export const cancelMyOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findOne({ _id: req.params.id, user: req.user!.id });
+  const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
   if (!order) return res.status(404).json({ message: 'Order not found' });
   if (order.status !== 'Pending') return res.status(400).json({ message: 'Only pending orders can be cancelled' });
   order.status = 'Cancelled';

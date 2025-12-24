@@ -4,6 +4,7 @@ import { User } from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import { signToken } from '../utils/jwt.js';
 import mongoose from 'mongoose';
+import { Product } from '../models/product.model.js';
 
 export const register = asyncHandler(async (req, res) => {
   const data = registerSchema.parse(req.body);
@@ -111,6 +112,18 @@ function sanitizeUser(user) {
 // Cart operations
 export const getCart = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
+
+  // Update inStock for each cart item based on current product data
+  if (user && user.cart && user.cart.length > 0) {
+
+    for (let cartItem of user.cart) {
+      const product = await Product.findById(cartItem.product);
+      if (product) {
+        cartItem.inStock = product.inStock;
+      }
+    }
+  }
+
   res.json({ cart: user?.cart ?? [] });
 });
 
@@ -119,12 +132,17 @@ export const addToCart = asyncHandler(async (req, res) => {
   if (!productId || !quantity) return res.status(400).json({ message: 'Invalid cart item' });
   const user = await User.findById(req.user.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
-  const { Product } = await import('../models/product.model.js');
   const product = await Product.findById(productId);
   if (!product || !product.isActive) return res.status(404).json({ message: 'Product not found' });
   const existing = user.cart.find((c) => String(c.product) === productId);
   if (existing) existing.quantity += quantity;
-  else user.cart.push({ product: new mongoose.Types.ObjectId(productId), name: product.name, price: product.price, quantity });
+  else user.cart.push({
+    product: new mongoose.Types.ObjectId(productId),
+    name: product.name,
+    price: product.price,
+    inStock: product.inStock,  // Add inStock field
+    quantity
+  });
   await user.save();
   res.status(201).json({ cart: user.cart });
 });
@@ -136,6 +154,13 @@ export const updateCartItem = asyncHandler(async (req, res) => {
   const item = user.cart.find((c) => String(c.product) === productId);
   if (!item) return res.status(404).json({ message: 'Item not found' });
   item.quantity = quantity;
+
+  // Update inStock if product exists
+  const product = await Product.findById(productId);
+  if (product) {
+    item.inStock = product.inStock;
+  }
+
   await user.save();
   res.json({ cart: user.cart });
 });

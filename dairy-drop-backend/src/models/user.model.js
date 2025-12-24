@@ -18,6 +18,7 @@ const CartItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   name: { type: String, required: true },
   price: { type: Number, required: true },
+  inStock: { type: Number, default: 0 }, // Add inStock field
   quantity: { type: Number, required: true, min: 1 },
 });
 

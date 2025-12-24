@@ -51,6 +51,24 @@ export const placeOrder = asyncHandler(async (req, res) => {
     paymentStatus: 'Unpaid',
   });
 
+  // Save the shipping address to user's address book if it doesn't already exist
+  const existingAddressIndex = user.addresses.findIndex(
+    addr => addr.line1 === address.line1 &&
+            addr.city === address.city &&
+            addr.postalCode === address.postalCode
+  );
+
+  if (existingAddressIndex === -1) {
+    // Add the new address to user's address book
+    const newAddress = {
+      ...address,
+      label: address.name, // Use the name as the label
+      isDefault: user.addresses.length === 0 // Set as default if it's the first address
+    };
+    user.addresses.push(newAddress);
+    await user.save();
+  }
+
   // Clear cart if we placed from cart
   if (fromCart || (!items || items.length === 0)) {
     user.cart = [];
