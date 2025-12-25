@@ -1,9 +1,17 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.schema.js';
 import { Product } from '../models/product.model.js';
+import { uploadMultipleToCloudinary, deleteFromCloudinary } from '../utils/imageUpload.js';
 
 export const createProduct = asyncHandler(async (req, res) => {
   const data = createProductSchema.parse(req.body);
+
+  // Handle image uploads if files are present
+  if (req.files && req.files.length > 0) {
+    const uploadResults = await uploadMultipleToCloudinary(req.files);
+    data.images = uploadResults.map(result => result.secure_url);
+  }
+
   const product = await Product.create(data);
   res.status(201).json({ product });
 });
@@ -31,14 +39,61 @@ export const getProduct = asyncHandler(async (req, res) => {
 
 export const updateProduct = asyncHandler(async (req, res) => {
   const patch = updateProductSchema.parse(req.body);
-  const product = await Product.findByIdAndUpdate(req.params.id, patch, { new: true });
+  const product = await Product.findById(req.params.id);
+
   if (!product) return res.status(404).json({ message: 'Product not found' });
-  res.json({ product });
+
+  // Handle image uploads if files are present
+  if (req.files && req.files.length > 0) {
+    // Delete old images from Cloudinary if they exist
+    if (product.images && product.images.length > 0) {
+      // Extract public IDs from the URLs to delete them
+      for (const imageUrl of product.images) {
+        try {
+          // Extract public ID from Cloudinary URL
+          const urlParts = imageUrl.split('/');
+          const publicIdWithExtension = urlParts[urlParts.length - 1];
+          const publicId = publicIdWithExtension.split('.')[0]; // Remove extension
+          await deleteFromCloudinary(publicId);
+        } catch (error) {
+          console.error('Error deleting old image from Cloudinary:', error);
+          // Continue even if deletion fails
+        }
+      }
+    }
+
+    // Upload new images
+    const uploadResults = await uploadMultipleToCloudinary(req.files);
+    patch.images = uploadResults.map(result => result.secure_url);
+  }
+
+  const updatedProduct = await Product.findByIdAndUpdate(req.params.id, patch, { new: true });
+  res.json({ product: updatedProduct });
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
+  const product = await Product.findById(req.params.id);
+
   if (!product) return res.status(404).json({ message: 'Product not found' });
+
+  // Delete images from Cloudinary if they exist
+  if (product.images && product.images.length > 0) {
+    // Extract public IDs from the URLs to delete them
+    for (const imageUrl of product.images) {
+      try {
+        // Extract public ID from Cloudinary URL
+        const urlParts = imageUrl.split('/');
+        const publicIdWithExtension = urlParts[urlParts.length - 1];
+        const publicId = publicIdWithExtension.split('.')[0]; // Remove extension
+        await deleteFromCloudinary(publicId);
+      } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error);
+        // Continue even if deletion fails
+      }
+    }
+  }
+
+  await Product.findByIdAndDelete(req.params.id);
   res.json({ message: 'Product deleted' });
 });
 
