@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const images = [
     "https://images.unsplash.com/photo-1571212515416-fef01fc43637?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8eW9ndXJ0fGVufDB8fDB8fHww",
     "https://media.istockphoto.com/id/2209167127/photo/indian-paneer-cheese-made-from-fresh-milk-and-lemon-juice-on-grey-background-copy-space.webp?a=1&b=1&s=612x612&w=0&k=20&c=PAn7GuHgdN5S4hlXW2lQcUV-OGegD5GuLyvKf-fsr4E=",
@@ -7,63 +9,52 @@ const images = [
 ]
 
 export const ProductCard = ({ product, index, onAddToCart }) => {
+    const productId = product._id || product.id;
+    console.log("productId:", productId);
+
     return (
-        <div className='bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group'>
-            {/* Image */}
-            <div className='relative aspect-square overflow-hidden bg-gray-100'>
-                <img
-                    src={product.image || images[index % images.length]}
-                    alt={product.name}
-                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                />
-                {/* Category Badge */}
-                {/* <div className='absolute top-3 left-3 px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full'>
-                    {product.category}
-                </div> */}
-                {/* Stock Badge */}
-                {product.inStock < 20 && product.inStock > 0 && (
-                    <div className='absolute top-3 right-3 px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full'>
-                        Low Stock
-                    </div>
-                )}
-            </div>
+        <div className='flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group'>
 
-            {/* Content */}
-            <div className='p-5'>
-                <h3 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2'>
-                    {product.name}
-                </h3>
-
-                {/* Rating */}
-                <div className='flex items-center gap-2 mb-3'>
-                    <div className='flex'>
-                        {[...Array(5)].map((_, i) => (
-                            <svg
-                                key={i}
-                                className={`w-4 h-4 ${i < Math.floor(4.5) ? 'text-yellow-500' : 'text-gray-300'}`}
-                                fill='currentColor'
-                                viewBox='0 0 20 20'
-                            >
-                                <path d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z' />
-                            </svg>
-                        ))}
-                    </div>
-                    <span className='text-sm text-gray-600'>4.5</span>
+            {/* Link wrapper - Added flex-grow so it takes up available space */}
+            <Link to={productId ? `/products/${productId}` : '#'} className="flex-grow">
+                {/* Image */}
+                <div className='relative aspect-square overflow-hidden bg-gray-100'>
+                    <img
+                        src={product.image || images[index % images.length]}
+                        alt={product.name}
+                        className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                    />
+                    {product.inStock < 20 && product.inStock > 0 && (
+                        <div className='absolute top-3 right-3 px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full'>
+                            Low Stock
+                        </div>
+                    )}
                 </div>
 
-                {/* Price & Stock */}
-                <div className='flex items-center justify-between mb-4'>
-                    <span className='text-2xl font-bold text-gray-900'>${product.price}</span>
-                    <span className={`text-sm font-semibold ${product.inStock > 20 ? 'text-green-600' :
-                        product.inStock > 0 ? 'text-yellow-600' : 'text-red-600'
-                        }`}>
-                        {product.inStock > 0 ? `${product.inStock} left` : 'Out of stock'}
-                    </span>
+                {/* Content */}
+                <div className='p-5'>
+                    <h3 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2'>
+                        {product.name}
+                    </h3>
+                    <div className='flex items-center justify-between mb-4'>
+                        <span className='text-2xl font-bold text-gray-900'>${product.price}</span>
+                        <span className={`text-sm font-semibold ${product.inStock > 20 ? 'text-green-600' :
+                            product.inStock > 0 ? 'text-yellow-600' : 'text-red-600'
+                            }`}>
+                            {product.inStock > 0 ? `${product.inStock} left` : 'Out of stock'}
+                        </span>
+                    </div>
                 </div>
+            </Link>
 
-                {/* Add to Cart */}
+            {/* Add to Cart Button - Now guaranteed to be visible at the bottom */}
+            <div className='px-5 pb-5 mt-auto'>
                 <button
-                    onClick={() => onAddToCart(product)}
+                    onClick={(e) => {
+                        e.preventDefault(); // Safety
+                        e.stopPropagation();
+                        onAddToCart(product);
+                    }}
                     disabled={product.inStock === 0}
                     className={`w-full px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${product.inStock > 0
                         ? 'bg-blue-600 text-white hover:bg-blue-700'

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, CreditCard, MapPin, User, Mail, Phone, Lock, Truck, Check, X, Loader2 } from 'lucide-react';
-import { useGetCartQuery } from '../api/cartApi.js';
+import { useSyncCartWithStore } from '../hooks/useSyncCartWithStore.js';
 import { usePlaceOrderMutation } from '../api/orderApi.js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ const Checkout = () => {
     });
 
     const navigate = useNavigate();
-    const { data: cartItems = [], isLoading, isError } = useGetCartQuery();
+    const { cartData: cartItems = [], isLoading, isError } = useSyncCartWithStore();
     const [placeOrder, { isLoading: isPlacingOrder }] = usePlaceOrderMutation();
 
     // Calculate totals

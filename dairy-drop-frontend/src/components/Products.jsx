@@ -2,6 +2,7 @@ import { useListProductsQuery } from '../api/productsApi.js'
 import { useAddToCartMutation } from '../api/cartApi.js'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Products = () => {
     // Fetch top products (most recent) for the home page
@@ -93,11 +94,13 @@ const Products = () => {
                                         >
                                             {/* Image Container */}
                                             <div className='relative aspect-square overflow-hidden bg-gray-100'>
-                                                <img
-                                                    src={product.images?.[0] || images[index] || 'https://placehold.co/400x400?text=No+Image'}
-                                                    alt={product.name}
-                                                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                                                />
+                                                <Link to={`/products/${product._id}`}>
+                                                    <img
+                                                        src={product.images?.[0] || images[index] || 'https://placehold.co/400x400?text=No+Image'}
+                                                        alt={product.name}
+                                                        className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                                                    />
+                                                </Link>
 
                                                 {/* Stock Badge */}
                                                 {product.inStock < 20 && (
@@ -110,9 +113,11 @@ const Products = () => {
                                             {/* Content */}
                                             <div className='p-5 flex flex-col flex-grow'>
                                                 {/* Product Name */}
-                                                <h3 className='text-lg font-bold text-gray-900 mb-2'>
-                                                    {product.name}
-                                                </h3>
+                                                <Link to={`/products/${product._id}`}>
+                                                    <h3 className='text-lg font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer'>
+                                                        {product.name}
+                                                    </h3>
+                                                </Link>
 
                                                 {/* Description */}
                                                 <p className='text-sm text-gray-600 mb-3 line-clamp-2'>

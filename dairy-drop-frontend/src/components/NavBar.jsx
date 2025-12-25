@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '@/features/auth/authSlice.js'
+import { selectCartItemCount } from '@/features/cart/cartSlice.js'
 import logo from "../assets/images/logo.jpg"
 import useAuth from '../hooks/useAuth'
 import { UserRound } from 'lucide-react'
@@ -10,7 +11,7 @@ export default function NavBar() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const userInfo = useSelector((s) => s.auth.userInfo)
-  const cartItemCount = useSelector((s) => s.cart?.items?.length || 0)
+  const cartItemCount = useSelector(selectCartItemCount)
 
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');

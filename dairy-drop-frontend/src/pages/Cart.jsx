@@ -1,11 +1,12 @@
 import { useGetCartQuery, useUpdateCartItemMutation, useRemoveCartItemMutation } from '../api/cartApi.js';
 import { useGetProductQuery } from '../api/productsApi.js';
+import { useSyncCartWithStore } from '../hooks/useSyncCartWithStore.js';
 import CartItem from '../components/Cart/CartItem';
 import CartSummary from '../components/Cart/CartSummary';
 import { toast } from 'sonner';
 
 const Cart = () => {
-    const { data: cartItems = [], isLoading, isError, refetch } = useGetCartQuery();
+    const { cartData: cartItems = [], isLoading, isError, refetch } = useSyncCartWithStore();
     const [updateCartItem] = useUpdateCartItemMutation();
     const [removeCartItem] = useRemoveCartItemMutation();
 

@@ -16,7 +16,7 @@ const cartSlice = createSlice({
     addToCart: (state, action) => {
       const item = action.payload
       const existingItem = state.items.find(cartItem => cartItem.product === item.product)
-      
+
       if (existingItem) {
         existingItem.quantity += item.quantity
       } else {
@@ -26,7 +26,7 @@ const cartSlice = createSlice({
     updateCartItem: (state, action) => {
       const { productId, quantity } = action.payload
       const item = state.items.find(cartItem => cartItem.product === productId)
-      
+
       if (item) {
         if (quantity <= 0) {
           state.items = state.items.filter(cartItem => cartItem.product !== productId)
@@ -51,14 +51,19 @@ const cartSlice = createSlice({
   },
 })
 
-export const { 
-  setCart, 
-  addToCart, 
-  updateCartItem, 
-  removeFromCart, 
-  clearCart, 
-  setLoading, 
-  setError 
+export const {
+  setCart,
+  addToCart,
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+  setLoading,
+  setError
 } = cartSlice.actions
+
+// Selector to get the total number of items in the cart (sum of all quantities)
+export const selectCartItemCount = (state) => {
+  return state.cart.items.reduce((total, item) => total + item.quantity, 0)
+}
 
 export default cartSlice.reducer

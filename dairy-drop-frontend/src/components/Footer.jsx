@@ -40,7 +40,7 @@ const Footer = () => {
 
                 {/* Copyright */}
                 <div className='text-center mt-6 pt-6 border-t border-gray-800 flex items-center justify-between'>
-                    <p className='text-gray-400 text-sm'>Copyright © 2025 Dairy Drop. All rights reserved.</p>
+                    <p className='text-gray-400 text-sm'>Copyright © 2026 Dairy Drop. All rights reserved.</p>
                     <p className='text-gray-400 text-sm'>Developed by <span className='text-gray-200'>Muhammad Umer</span></p>
                 </div>
             </div>
