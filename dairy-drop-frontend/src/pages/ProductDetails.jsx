@@ -3,7 +3,7 @@ import { Star, ShoppingCart, Heart, Truck, Shield, RotateCcw, Check, ChevronLeft
 import { Link, useParams } from 'react-router-dom';
 import { useGetProductQuery } from '../api/productsApi.js';
 import { useAddToCartMutation } from '../api/cartApi.js';
-import { useListProductReviewsQuery, useAddReviewMutation } from '../api/reviewApi.js';
+import { useListProductReviewsQuery, useAddReviewMutation, useUpdateMyReviewMutation, useDeleteMyReviewMutation } from '../api/reviewApi.js';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
@@ -15,6 +15,11 @@ const ProductDetails = () => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [reviewComment, setReviewComment] = useState('');
+    const [editingReviewId, setEditingReviewId] = useState(null);
+    const [editingReviewData, setEditingReviewData] = useState({ rating: 0, comment: '' });
+    const [reviewToDelete, setReviewToDelete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const reviewsPerPage = 5;
 
     const userInfo = useSelector((state) => state.auth.userInfo);
 
@@ -22,16 +27,23 @@ const ProductDetails = () => {
     const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
 
     // Fetch real-time reviews from the database
-    const { data: reviewsData, isLoading: reviewsLoading, isError: reviewsError } = useListProductReviewsQuery(productId);
+    const { data: reviewsData, isLoading: reviewsLoading, isError: reviewsError } = useListProductReviewsQuery({
+        productId,
+        page: currentPage,
+        limit: reviewsPerPage
+    });
     const [addReview, { isLoading: isAddingReview }] = useAddReviewMutation();
+    const [updateMyReview, { isLoading: isUpdatingReview }] = useUpdateMyReviewMutation();
+    const [deleteMyReview, { isLoading: isDeletingReview }] = useDeleteMyReviewMutation();
 
     const product = data?.product || {};
     const reviews = reviewsData?.reviews || [];
+    const pagination = reviewsData?.pagination || {};
 
     const fallbackImages = [
         'https://images.unsplash.com/photo-1635586506547-4dbe01d7ba5d?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
         'https://images.unsplash.com/photo-1633179963862-72c64dc6d30d?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
-        'https://plus.unsplash.com/premium_photo-1664298144031-9097970e5bd3?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
+        'https://plus.unsplash.com/premium_photo-1664298144031-9097970e5bd3?w=900&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
         'https://images.unsplash.com/photo-1630409346699-79481a79db52?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
     ];
 
@@ -59,13 +71,25 @@ const ProductDetails = () => {
         }
 
         try {
-            await addReview({
-                productId: product._id,
-                rating: rating,
-                comment: reviewComment
-            }).unwrap();
+            if (editingReviewId) {
+                // Update existing review
+                await updateMyReview({
+                    productId: product._id,
+                    rating: rating,
+                    comment: reviewComment
+                }).unwrap();
+                toast.success('Review updated successfully!');
+                setEditingReviewId(null); // Exit edit mode
+            } else {
+                // Add new review
+                await addReview({
+                    productId: product._id,
+                    rating: rating,
+                    comment: reviewComment
+                }).unwrap();
+                toast.success('Review submitted successfully!');
+            }
 
-            toast.success('Review submitted successfully!');
             setRating(0);
             setReviewComment('');
 
@@ -75,6 +99,12 @@ const ProductDetails = () => {
             console.error('Error submitting review:', error);
             toast.error('Failed to submit review');
         }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingReviewId(null);
+        setRating(0);
+        setReviewComment('');
     };
 
     const handleAddToCart = async () => {
@@ -389,6 +419,34 @@ const ProductDetails = () => {
                                             <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
                                                 Verified Purchase
                                             </span>
+                                            {userInfo?.token && review.user && (
+                                                <div className="flex gap-2 ml-auto">
+                                                    {((review.user._id === userInfo._id || review.user.id === userInfo._id || review.user._id === userInfo.id) && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingReviewId(review._id);
+                                                                    setEditingReviewData({ rating: review.rating, comment: review.comment });
+                                                                    setRating(review.rating);
+                                                                    setReviewComment(review.comment);
+                                                                }}
+                                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-100 px-4 py-1 transition-all duration-300"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setReviewToDelete(review._id);
+                                                                }}
+                                                                disabled={isDeletingReview}
+                                                                className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-100 px-4 py-1 transition-all duration-300 disabled:opacity-50"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="flex items-center">
@@ -419,10 +477,41 @@ const ProductDetails = () => {
                         )}
                     </div>
 
+                    {/* Pagination Controls */}
+                    {pagination?.totalPages > 1 && (
+                        <div className="flex items-center justify-between mb-8">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                Previous
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-600">
+                                    Page {currentPage} of {pagination.totalPages}
+                                </span>
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
+                                disabled={currentPage === pagination.totalPages}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+
                     {/* Write Review Form - Only show if user is logged in */}
                     {userInfo?.token ? (
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-6">Write a Review</h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-6">
+                                {editingReviewId ? 'Edit Your Review' : 'Write a Review'}
+                            </h3>
                             <form onSubmit={handleSubmitReview} className="space-y-5">
                                 {/* Rating Selection */}
                                 <div>
@@ -461,21 +550,33 @@ const ProductDetails = () => {
                                     ></textarea>
                                 </div>
 
-                                {/* Submit Button */}
-                                <button
-                                    type="submit"
-                                    disabled={isAddingReview}
-                                    className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isAddingReview ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Submitting...
-                                        </>
-                                    ) : (
-                                        'Submit Review'
+                                {/* Submit and Cancel Buttons */}
+                                <div className="flex gap-3">
+                                    <button
+                                        type="submit"
+                                        disabled={isAddingReview || isUpdatingReview}
+                                        className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {(isAddingReview || isUpdatingReview) ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                {editingReviewId ? 'Updating...' : 'Submitting...'}
+                                            </>
+                                        ) : (
+                                            editingReviewId ? 'Update Review' : 'Submit Review'
+                                        )}
+                                    </button>
+
+                                    {editingReviewId && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            className="px-8 py-3 bg-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-400 transition"
+                                        >
+                                            Cancel
+                                        </button>
                                     )}
-                                </button>
+                                </div>
                             </form>
                         </div>
                     ) : (
@@ -484,6 +585,43 @@ const ProductDetails = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Delete Confirmation Modal */}
+                {reviewToDelete && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Deletion</h3>
+                            <p className="text-gray-600 mb-6">Are you sure you want to delete this review? This action cannot be undone.</p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setReviewToDelete(null)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                                    disabled={isDeletingReview}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await deleteMyReview(product._id).unwrap();
+                                            toast.success('Review deleted successfully!');
+                                            setReviewToDelete(null);
+                                            refetch();
+                                        } catch (error) {
+                                            console.error('Error deleting review:', error);
+                                            toast.error('Failed to delete review');
+                                            setReviewToDelete(null);
+                                        }
+                                    }}
+                                    disabled={isDeletingReview}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                                >
+                                    {isDeletingReview ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

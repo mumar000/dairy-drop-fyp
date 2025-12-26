@@ -13,9 +13,22 @@ export const reviewApi = baseApi.injectEndpoints({
         { type: 'Product', id: productId }
       ],
     }),
+    updateMyReview: builder.mutation({
+      query: ({ productId, rating, comment }) => ({
+        url: `/reviews/product/${productId}`,
+        method: 'PUT',
+        body: { rating, comment },
+      }),
+      invalidatesTags: (result, error, { productId }) => [
+        { type: 'Review', id: productId },
+        { type: 'Product', id: productId }
+      ],
+    }),
     listProductReviews: builder.query({
-      query: (productId) => ({ url: `/reviews/product/${productId}` }),
-      providesTags: (result, error, productId) => [
+      query: ({ productId, page = 1, limit = 5 }) => ({
+        url: `/reviews/product/${productId}?page=${page}&limit=${limit}`
+      }),
+      providesTags: (result, error, { productId }) => [
         { type: 'Review', id: productId }
       ],
     }),
@@ -34,6 +47,7 @@ export const reviewApi = baseApi.injectEndpoints({
 
 export const {
   useAddReviewMutation,
+  useUpdateMyReviewMutation,
   useListProductReviewsQuery,
   useDeleteMyReviewMutation,
 } = reviewApi
