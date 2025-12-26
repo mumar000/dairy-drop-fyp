@@ -3662,12 +3662,22 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { q, category, minPrice, maxPrice, inStock, page = '1', limit = '12', sort = '-createdAt' } = req.query;
+  const { q, category, minPrice, maxPrice, inStock, ratings, page = '1', limit = '12', sort = '-createdAt' } = req.query;
   const filter = { isActive: true };
   if (q) filter.$text = { $search: q };
   if (category) filter.category = category;
   if (minPrice || maxPrice) filter.price = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
   if (inStock) filter.inStock = { $gte: Number(inStock) };
+  if (ratings) {
+    // Convert ratings to an array and find the highest rating
+    const ratingValues = ratings.split(',').map(r => Number(r));
+    if (ratingValues.length > 0) {
+      // Filter for products with averageRating greater than or equal to the highest selected rating
+      // For example, if user selects 4 and 3 stars, show products with rating >= 3 (the minimum)
+      const minRating = Math.min(...ratingValues);
+      filter.averageRating = { $gte: minRating };
+    }
+  }
   const skip = (Number(page) - 1) * Number(limit);
   const [items, total] = await Promise.all([
     Product.find(filter).sort(String(sort)).skip(skip).limit(Number(limit)),
