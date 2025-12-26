@@ -43,7 +43,8 @@ const Products = () => {
         minPrice: filters.priceRange.min || undefined,
         maxPrice: filters.priceRange.max || undefined,
         inStock: filters.inStockOnly ? 1 : undefined,
-        q: searchQuery || undefined, // Add search parameter (backend expects 'q')
+        ratings: filters.ratings.length > 0 ? filters.ratings.join(',') : undefined,
+        q: searchQuery || undefined, // Add search parameter (backend expects 'q'),
     }
 
     const { data, isLoading, isError, error, refetch } = useListProductsQuery(queryParams)

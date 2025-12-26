@@ -1,3 +1,4 @@
+import { Star, StarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const images = [
@@ -33,16 +34,34 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
 
                 {/* Content */}
                 <div className='p-5'>
-                    <h3 className='text-lg font-bold text-gray-900 mb-2 line-clamp-2'>
+                    <h3 className='text-lg font-bold text-blue-600 mb-2 line-clamp-2'>
                         {product.name}
                     </h3>
                     <div className='flex items-center justify-between mb-4'>
                         <span className='text-2xl font-bold text-gray-900'>${product.price}</span>
-                        <span className={`text-sm font-semibold ${product.inStock > 20 ? 'text-green-600' :
+                        <span className={`text-sm font-semibold bg-gray-100 p-1 ${product.inStock > 20 ? 'text-green-600' :
                             product.inStock > 0 ? 'text-yellow-600' : 'text-red-600'
                             }`}>
                             {product.inStock > 0 ? `${product.inStock} left` : 'Out of stock'}
                         </span>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                        {/* Description */}
+                        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                            {product.description}
+                        </p>
+
+                        {/* Rating */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium flex items-center gap-2 text-gray-800">
+                                <Star className='text-yellow-400' /> {(product.averageRating && product.averageRating > 0)
+                                    ? product.averageRating.toFixed(1)
+                                    : "3.5"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                                Rating
+                            </span>
+                        </div>
                     </div>
                 </div>
             </Link>
