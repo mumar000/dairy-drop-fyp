@@ -4,12 +4,15 @@ import { Product } from '../models/product.model.js';
 import { uploadMultipleToCloudinary, deleteFromCloudinary } from '../utils/imageUpload.js';
 
 export const createProduct = asyncHandler(async (req, res) => {
-  const data = createProductSchema.parse(req.body);
+  let data = createProductSchema.parse(req.body);
 
   // Handle image uploads if files are present
   if (req.files && req.files.length > 0) {
     const uploadResults = await uploadMultipleToCloudinary(req.files);
     data.images = uploadResults.map(result => result.secure_url);
+  } else if (!data.images) {
+    // If no files uploaded and no images in body, default to empty array
+    data.images = [];
   }
 
   const product = await Product.create(data);

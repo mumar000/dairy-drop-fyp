@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
+import { upload } from '../utils/imageUpload.js';
 import { createProduct, listProducts, getProduct, updateProduct, deleteProduct, listCategories } from '../controllers/product.controller.js';
 
 const router = Router();
@@ -9,8 +10,9 @@ router.get('/', listProducts);
 router.get('/categories', listCategories);
 router.get('/:id', getProduct); // This should come after specific routes
 
-router.post('/', authenticate, authorize('admin'), createProduct);
-router.patch('/:id', authenticate, authorize('admin'), updateProduct);
+// Use Multer middleware for handling file uploads
+router.post('/', authenticate, authorize('admin'), upload.array('images', 10), createProduct);
+router.patch('/:id', authenticate, authorize('admin'), upload.array('images', 10), updateProduct);
 router.delete('/:id', authenticate, authorize('admin'), deleteProduct);
 
 export default router;
