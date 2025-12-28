@@ -23,7 +23,7 @@ const OrdersPage = () => {
       })
 
       const data = await response.json()
-      setOrders(data.data || [])
+      setOrders(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       toast.error("Failed to load orders")
       console.error("Orders error:", error)
@@ -43,7 +43,7 @@ const OrdersPage = () => {
     return colors[status] || "bg-gray-100 text-gray-800"
   }
 
-  const filteredOrders = statusFilter === "all" ? orders : orders.filter((order) => order.status === statusFilter)
+  const filteredOrders = statusFilter === "all" ? (Array.isArray(orders) ? orders : []) : (Array.isArray(orders) ? orders : []).filter((order) => order.status === statusFilter)
 
   if (loading) {
     return <div className="text-center py-10">Loading orders...</div>

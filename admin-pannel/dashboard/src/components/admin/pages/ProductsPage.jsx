@@ -23,7 +23,7 @@ const ProductsPage = () => {
       })
 
       const data = await response.json()
-      setProducts(data.data || [])
+      setProducts(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       toast.error("Failed to load products")
       console.error("Products error:", error)

@@ -23,7 +23,7 @@ const UsersPage = () => {
       })
 
       const data = await response.json()
-      setUsers(data.data || [])
+      setUsers(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       toast.error("Failed to load users")
       console.error("Users error:", error)
@@ -101,7 +101,7 @@ const UsersPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {Array.isArray(users) && users.map((user) => (
               <tr key={user._id} className="border-b hover:bg-gray-50 transition">
                 <td className="px-6 py-3 font-medium text-gray-800">{user.name}</td>
                 <td className="px-6 py-3 text-gray-600">{user.email}</td>
@@ -144,7 +144,7 @@ const UsersPage = () => {
         </table>
       </div>
 
-      {users.length === 0 && (
+      {(!Array.isArray(users) || users.length === 0) && (
         <div className="text-center py-10 bg-white rounded-lg">
           <p className="text-gray-500">No users found</p>
         </div>
