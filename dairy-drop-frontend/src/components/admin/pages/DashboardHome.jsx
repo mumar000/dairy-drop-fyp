@@ -3,6 +3,7 @@ import { toast } from "sonner"
 import StatCard from "../StatCard.jsx"
 import { ShoppingCart, Package, Users, TrendingUp } from "lucide-react"
 import Loader from "../Loader.jsx"
+import { useGetOrdersQuery, useGetProductsQuery, useGetUsersQuery } from "../../../api/adminApi.js"
 
 const DashboardHome = () => {
   const [stats, setStats] = useState({
@@ -11,51 +12,35 @@ const DashboardHome = () => {
     totalUsers: 0,
     totalRevenue: 0,
   })
-  const [loading, setLoading] = useState(true)
+
+  const { data: orders, isLoading: ordersLoading, isError: ordersError } = useGetOrdersQuery()
+  const { data: products, isLoading: productsLoading, isError: productsError } = useGetProductsQuery()
+  const { data: users, isLoading: usersLoading, isError: usersError } = useGetUsersQuery()
 
   useEffect(() => {
-    fetchDashboardStats()
-  }, [])
+    // Calculate stats when data is available
+    const ordersData = orders?.orders || []
+    const productsData = products?.items || []
+    const usersData = users?.users || []
 
-  const fetchDashboardStats = async () => {
-    try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
+    const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((sum, order) => sum + order.totalAmount, 0) : 0
 
-      const [ordersRes, productsRes, usersRes] = await Promise.all([
-        fetch(`${baseUrl}/api/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${baseUrl}/api/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${baseUrl}/api/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ])
+    setStats({
+      totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
+      totalProducts: Array.isArray(productsData) ? productsData.length : 0,
+      totalUsers: Array.isArray(usersData) ? usersData.length : 0,
+      totalRevenue,
+    })
+  }, [orders, products, users])
 
-      const ordersData = await ordersRes.json()
-      const productsData = await productsRes.json()
-      const usersData = await usersRes.json()
-
-      const totalRevenue = ordersData.orders?.reduce((sum, order) => sum + order.totalAmount, 0) || 0
-
-      setStats({
-        totalOrders: ordersData.orders?.length || 0,
-        totalProducts: productsData.items?.length || 0,
-        totalUsers: usersData.users?.length || 0,
-        totalRevenue,
-      })
-    } catch (error) {
-      toast.error("Failed to load dashboard statistics")
-      console.error("Stats error:", error)
-    } finally {
-      setLoading(false)
-    }
+  // If any data is loading, show loading state
+  if (ordersLoading || productsLoading || usersLoading) {
+    return <Loader text={"Loading Dashboard"}/>
   }
 
-  if (loading) {
-    return <Loader text={"Loading Dashboard"}/>
+  // If any request failed, show error
+  if (ordersError || productsError || usersError) {
+    return <div className="text-center py-10 text-red-500">Failed to load dashboard statistics</div>
   }
 
   return (
@@ -63,9 +48,9 @@ const DashboardHome = () => {
       <h2 className="text-2xl font-bold text-gray-800 mb-8">Dashboard Overview</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard icon={ShoppingCart} title="Total Orders" value={stats.totalOrders} color="blue" />
-        <StatCard icon={Package} title="Total Products" value={stats.totalProducts} color="green" />
-        <StatCard icon={Users} title="Total Users" value={stats.totalUsers} color="purple" />
+        <StatCard icon={ShoppingCart} title="Total Orders" value={orders?.orders?.length || 0} color="blue" />
+        <StatCard icon={Package} title="Total Products" value={products?.items?.length || 0} color="green" />
+        <StatCard icon={Users} title="Total Users" value={users?.users?.length || 0} color="purple" />
         <StatCard icon={TrendingUp} title="Total Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} color="orange" />
       </div>
 
@@ -92,7 +77,7 @@ const DashboardHome = () => {
               Active Products
             </p>
             <p className="mt-2 text-2xl font-semibold text-green-600">
-              {stats.totalProducts}
+              {Array.isArray(products?.items) ? products.items.filter((p) => p.inStock > 0).length || 0 : 0}
             </p>
           </div>
         </div>

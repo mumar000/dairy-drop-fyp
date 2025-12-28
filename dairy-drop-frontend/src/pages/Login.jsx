@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useLoginMutation } from '@/api/authApi.js'
 import { setCredentials } from '@/features/auth/authSlice.js'
 import loginImage from '../assets/images/logo.jpg'
@@ -13,14 +13,31 @@ export default function Login() {
   const [login, { isLoading }] = useLoginMutation()
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // If user is already logged in, redirect to appropriate page
+  if (userInfo && userInfo.user) {
+    if (userInfo.user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/");
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       const res = await login({ emailOrPhone, password }).unwrap()
       dispatch(setCredentials({ token: res.token, user: res.user }))
-      toast.success("Login Success")
-      navigate('/')
+
+      // Redirect based on user role after successful login
+      if (res.user.role === "admin") {
+        toast.success("Admin login successful!")
+        navigate("/admin/dashboard")
+      } else {
+        toast.success("Login successful!")
+        navigate("/")
+      }
     } catch (err) {
       toast.error(err?.data?.message || 'Login failed')
     }

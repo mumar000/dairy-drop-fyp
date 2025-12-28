@@ -1,55 +1,24 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Trash2, Shield } from "lucide-react"
-import Loader from "../Loader"
+import Loader from "../Loader.jsx"
+import ConfirmationModal from "../ConfirmationModal.jsx"
+import { useGetUsersQuery, useUpdateUserRoleMutation, useDeleteUserMutation } from "../../../api/adminApi.js"
 
 const UsersPage = () => {
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState(null)
   const [showRoleModal, setShowRoleModal] = useState(false)
   const [newRole, setNewRole] = useState("user")
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  const fetchUsers = async () => {
-    try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
-
-      const response = await fetch(`${baseUrl}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      const data = await response.json()
-      setUsers(data.users || [])
-    } catch (error) {
-      toast.error("Failed to load users")
-      console.error("Users error:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: users, isLoading, isError, refetch } = useGetUsersQuery()
+  const [updateUserRole, { isLoading: isUpdatingRole }] = useUpdateUserRoleMutation()
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation()
 
   const handleUpdateRole = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
-
-      const response = await fetch(`${baseUrl}/api/users/${selectedUser._id}/role`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role: newRole }),
-      })
-
-      if (!response.ok) throw new Error("Update failed")
-
-      fetchUsers()
+      await updateUserRole({ id: selectedUser._id, role: newRole }).unwrap()
       setShowRoleModal(false)
       setSelectedUser(null)
       toast.success("User role updated successfully")
@@ -59,31 +28,30 @@ const UsersPage = () => {
     }
   }
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm("Are you sure you want to delete this user?")) return
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
 
     try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
-
-      const response = await fetch(`${baseUrl}/api/users/${userId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (!response.ok) throw new Error("Delete failed")
-
-      setUsers(users.filter((u) => u._id !== userId))
+      await deleteUser(userToDelete).unwrap()
       toast.success("User deleted successfully")
+      setUserToDelete(null)
+      setShowDeleteModal(false)
     } catch (error) {
       toast.error("Failed to delete user")
       console.error("Delete error:", error)
+      setShowDeleteModal(false)
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <Loader text={"Loading Users"} />
   }
+
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Failed to load users</div>
+  }
+
+  const usersList = Array.isArray(users?.users) ? users.users : []
 
   return (
     <div>
@@ -102,7 +70,7 @@ const UsersPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {usersList.map((user) => (
               <tr key={user._id} className="border-b hover:bg-gray-50 transition">
                 <td className="px-6 py-3 font-medium text-gray-800">{user.name}</td>
                 <td className="px-6 py-3 text-gray-600">{user.email}</td>
@@ -130,8 +98,12 @@ const UsersPage = () => {
                       <Shield size={18} />
                     </button>
                     <button
-                      onClick={() => handleDeleteUser(user._id)}
-                      className="text-red-600 hover:text-red-800"
+                      onClick={() => {
+                        setUserToDelete(user._id)
+                        setShowDeleteModal(true)
+                      }}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-800 disabled:opacity-50"
                       title="Delete user"
                     >
                       <Trash2 size={18} />
@@ -144,7 +116,7 @@ const UsersPage = () => {
         </table>
       </div>
 
-      {users.length === 0 && (
+      {usersList.length === 0 && (
         <div className="text-center py-10 bg-white rounded-lg">
           <p className="text-gray-500">No users found</p>
         </div>
@@ -162,7 +134,8 @@ const UsersPage = () => {
               <select
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+                disabled={isUpdatingRole}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
@@ -174,20 +147,33 @@ const UsersPage = () => {
                   setShowRoleModal(false)
                   setSelectedUser(null)
                 }}
-                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+                disabled={isUpdatingRole}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateRole}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                disabled={isUpdatingRole}
+                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition disabled:opacity-50"
               >
-                Update
+                {isUpdatingRole ? 'Updating...' : 'Update'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

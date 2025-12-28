@@ -14,37 +14,37 @@ const Orders = () => {
     const orders = data?.orders || [];
 
     const statusConfig = {
-        delivered: {
+        Delivered: {
             label: 'Delivered',
             color: 'bg-green-100 text-green-700 border-green-200',
             icon: CheckCircle,
             iconColor: 'text-green-600'
         },
-        shipped: {
+        Shipped: {
             label: 'Shipped',
             color: 'bg-blue-100 text-blue-700 border-blue-200',
             icon: Truck,
             iconColor: 'text-blue-600'
         },
-        confirmed: {
+        Confirmed: {
             label: 'Confirmed',
             color: 'bg-blue-100 text-blue-700 border-blue-200',
             icon: CheckCircle,
             iconColor: 'text-blue-600'
         },
-        pending: {
+        Pending: {
             label: 'Pending',
             color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             icon: Clock,
             iconColor: 'text-yellow-600'
         },
-        processing: {
+        Processing: {
             label: 'Processing',
             color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             icon: Clock,
             iconColor: 'text-yellow-600'
         },
-        cancelled: {
+        Cancelled: {
             label: 'Cancelled',
             color: 'bg-red-100 text-red-700 border-red-200',
             icon: XCircle,
@@ -54,9 +54,9 @@ const Orders = () => {
 
     const tabs = [
         { id: 'all', label: 'All Orders', count: orders.length },
-        { id: 'delivered', label: 'Delivered', count: orders.filter(o => o.status === 'delivered').length },
-        { id: 'shipped', label: 'Shipped', count: orders.filter(o => o.status === 'shipped').length },
-        { id: 'processing', label: 'Processing', count: orders.filter(o => o.status === 'processing').length },
+        { id: 'Delivered', label: 'Delivered', count: orders.filter(o => o.status === 'Delivered').length },
+        { id: 'Shipped', label: 'Shipped', count: orders.filter(o => o.status === 'Shipped').length },
+        { id: 'Processing', label: 'Processing', count: orders.filter(o => o.status === 'Processing').length },
         { id: 'Pending', label: 'Pending', count: orders.filter(o => o.status === 'Pending').length },
         { id: 'Cancelled', label: 'Cancelled', count: orders.filter(o => o.status === 'Cancelled').length }
     ];

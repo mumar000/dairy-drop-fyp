@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Star, ShoppingCart, Heart, Truck, Shield, RotateCcw, Check, ChevronLeft, ChevronRight, ChevronRight as ArrowRight, Loader2 } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useGetProductQuery } from '../api/productsApi.js';
 import { useAddToCartMutation } from '../api/cartApi.js';
 import { useListProductReviewsQuery, useAddReviewMutation, useUpdateMyReviewMutation, useDeleteMyReviewMutation } from '../api/reviewApi.js';
@@ -107,7 +107,17 @@ const ProductDetails = () => {
         setReviewComment('');
     };
 
+    const navigate = useNavigate();
+
     const handleAddToCart = async () => {
+        // Check if user is authenticated
+        if (!userInfo?.token) {
+            // If not authenticated, redirect to register page
+            toast.info('Please create an account to add items to cart');
+            navigate('/register');
+            return;
+        }
+
         try {
             await addToCart({
                 productId: product._id,
@@ -157,7 +167,7 @@ const ProductDetails = () => {
                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
                     <span className="hover:text-blue-600">Home</span>
                     <ChevronRight className="w-4 h-4" />
-                    <span className="hover:text-blue-600">{product.category}</span>
+                    <span className="hover:text-blue-600 capitalize">{product.category}</span>
                     <ChevronRight className="w-4 h-4" />
                     <span className="text-gray-900">{product.name}</span>
                     <ChevronRight className="w-4 h-4" />
@@ -205,7 +215,7 @@ const ProductDetails = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                             {/* Category */}
                             <div className="mb-3">
-                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full capitalize">
                                     {product.category}
                                 </span>
                             </div>

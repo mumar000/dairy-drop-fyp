@@ -1,17 +1,26 @@
 import { Star, StarIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-const images = [
-    "https://images.unsplash.com/photo-1571212515416-fef01fc43637?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8eW9ndXJ0fGVufDB8fDB8fHww",
-    "https://media.istockphoto.com/id/2209167127/photo/indian-paneer-cheese-made-from-fresh-milk-and-lemon-juice-on-grey-background-copy-space.webp?a=1&b=1&s=612x612&w=0&k=20&c=PAn7GuHgdN5S4hlXW2lQcUV-OGegD5GuLyvKf-fsr4E=",
-    "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWlsY3xlbnwwfHwwfHx8MA%3D%3D",
-    "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bWlsa3xlbnwwfHwwfHx8MA%3D%3D",
-    "https://images.unsplash.com/photo-1573812461383-e5f8b759d12e?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2hlZXxlbnwwfHwwfHx8MA%3D%3D"
-]
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 export const ProductCard = ({ product, index, onAddToCart }) => {
     const productId = product._id || product.id;
+    const navigate = useNavigate();
+    const userInfo = useSelector((state) => state.auth.userInfo);
     console.log("productId:", productId);
+
+    const handleAddToCart = (product) => {
+        // Check if user is authenticated
+        if (!userInfo?.token) {
+            // If not authenticated, redirect to register page
+            toast.info('Please create an account to add items to cart');
+            navigate('/register');
+            return;
+        }
+
+        // If authenticated, call the original onAddToCart function
+        onAddToCart(product);
+    };
 
     return (
         <div className='flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group'>
@@ -21,7 +30,11 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
                 {/* Image */}
                 <div className='relative aspect-square overflow-hidden bg-gray-100'>
                     <img
-                        src={product.image || images[index % images.length]}
+                        src={
+                            product?.images?.[0] ||
+                            product?.image ||
+                            "https://placehold.co/400x400?text=No+Image"
+                        }
                         alt={product.name}
                         className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                     />
@@ -72,7 +85,7 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
                     onClick={(e) => {
                         e.preventDefault(); // Safety
                         e.stopPropagation();
-                        onAddToCart(product);
+                        handleAddToCart(product);
                     }}
                     disabled={product.inStock === 0}
                     className={`w-full px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${product.inStock > 0

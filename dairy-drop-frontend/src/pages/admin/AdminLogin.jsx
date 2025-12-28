@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { setCredentials } from "../../features/auth/authSlice.js"
 import { toast } from "sonner"
 import { Mail, Lock, Loader2 } from "lucide-react"
@@ -11,6 +11,26 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (userInfo && userInfo.user) {
+      if (userInfo.user.role === "admin") {
+        // If already logged in as admin, redirect to dashboard
+        navigate("/admin/dashboard");
+      } else if (userInfo.user.role === "user") {
+        // If logged in as regular user, show error and redirect to home
+        toast.error("Access denied: Regular users cannot access admin panel");
+        navigate("/");
+      }
+    }
+  }, [userInfo, navigate]);
+
+  // If user is already logged in as admin, don't render the component
+  if (userInfo && userInfo.user && userInfo.user.role === "admin") {
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

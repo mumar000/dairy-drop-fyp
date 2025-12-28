@@ -5,8 +5,8 @@ const AdminHeader = () => {
   const userInfo = useSelector((state) => state.auth.userInfo)
 
   return (
-    <div className="bg-white shadow-sm   p-6 flex justify-between items-center">
-      <h1 className="text-2xl font-bold text-gray-800">Create | Manage | Analyze</h1>
+    <div className="bg-white shadow-sm p-6 flex justify-between items-center">
+      <h1 className="text-2xl font-bold text-gray-800 pr-4">Hey, {userInfo?.user?.name || "Admin"}!</h1><span className="flex-1 text-sm text-blue-600">Manage Your Dairy</span>
       <div className="flex items-center gap-6">
         <button className="relative p-2 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
           <Bell size={20} />

@@ -3,12 +3,12 @@ import { useGetMyOrdersQuery } from '../../api/orderApi.js'
 import { Loader2 } from 'lucide-react'
 
 const statusStyles = {
-    delivered: 'bg-green-100 text-green-700',
-    shipped: 'bg-blue-100 text-blue-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-    processing: 'bg-yellow-100 text-yellow-700',
-    cancelled: 'bg-red-100 text-red-700',
+    Delivered: 'bg-green-100 text-green-700',
+    Shipped: 'bg-blue-100 text-blue-700',
+    Confirmed: 'bg-blue-100 text-blue-700',
+    Pending: 'bg-yellow-100 text-yellow-700',
+    Processing: 'bg-yellow-100 text-yellow-700',
+    Cancelled: 'bg-red-100 text-red-700',
 }
 
 export const Orders = () => {

@@ -39,7 +39,6 @@ function AppContent() {
         <Route path="/login" element={<><NavBar /><Login /></>} />
         <Route path="/register" element={<><NavBar /><Register /></>} />
         <Route path="/products" element={<><NavBar /><Products /></>} />
-        <Route path="/profile" element={<><NavBar /><Profile /></>} />
         <Route path="/products/:productId" element={<><NavBar /><ProductDetails /></>} />
         <Route
           path="/cart"
@@ -65,7 +64,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <><NavBar /><Profile /></>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
         <Route
           path="/admin/dashboard"
           element={

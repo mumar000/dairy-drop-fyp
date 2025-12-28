@@ -1,46 +1,51 @@
 import { useState } from "react"
 import { toast } from "sonner"
 import { X } from "lucide-react"
+import ConfirmationModal from "./ConfirmationModal.jsx"
+import { useUpdateOrderStatusMutation } from "../../api/adminApi.js"
 
-const OrderDetailModal = ({ order, onClose }) => {
+const OrderDetailModal = ({ order, onClose, refetch }) => {
   const [status, setStatus] = useState(order.status)
-  const [loading, setLoading] = useState(false)
+  const [showStatusModal, setShowStatusModal] = useState(false)
+
+  const [updateOrderStatus, { isLoading }] = useUpdateOrderStatusMutation()
 
   const handleStatusUpdate = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
+      // Map frontend status to backend status
+      let backendStatus = status;
+      if (status === 'processing') {
+        backendStatus = 'Confirmed'; // Backend uses 'Confirmed' for processing
+      } else {
+        // Capitalize first letter for other statuses
+        backendStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      }
 
-      const response = await fetch(`${baseUrl}/api/orders/${order._id}/status`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      })
-
-      if (!response.ok) throw new Error("Update failed")
-
+      await updateOrderStatus({ id: order._id, status: backendStatus }).unwrap()
       toast.success("Order status updated successfully")
+      if (refetch) refetch()
       onClose()
     } catch (error) {
       toast.error("Failed to update order status")
       console.error("Error:", error)
-    } finally {
-      setLoading(false)
     }
   }
 
+  const handleStatusClick = () => {
+    setShowStatusModal(true)
+  }
+
   const getStatusColor = (s) => {
+    // Map frontend status to backend status for color matching
+    const backendStatus = s === 'processing' ? 'Confirmed' : s.charAt(0).toUpperCase() + s.slice(1);
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      processing: "bg-blue-100 text-blue-800",
-      shipped: "bg-purple-100 text-purple-800",
-      delivered: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+      Pending: "bg-yellow-100 text-yellow-800",
+      Confirmed: "bg-blue-100 text-blue-800", // Backend uses "Confirmed" for what frontend calls "Processing"
+      Shipped: "bg-purple-100 text-purple-800",
+      Delivered: "bg-green-100 text-green-800",
+      Cancelled: "bg-red-100 text-red-800",
     }
-    return colors[s] || "bg-gray-100 text-gray-800"
+    return colors[backendStatus] || "bg-gray-100 text-gray-800"
   }
 
   return (
@@ -48,7 +53,7 @@ const OrderDetailModal = ({ order, onClose }) => {
       <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold text-gray-800">Order Details</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={isLoading}>
             <X size={24} />
           </button>
         </div>
@@ -108,7 +113,8 @@ const OrderDetailModal = ({ order, onClose }) => {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
             >
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
@@ -121,20 +127,32 @@ const OrderDetailModal = ({ order, onClose }) => {
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
             >
               Close
             </button>
             <button
-              onClick={handleStatusUpdate}
-              disabled={loading || status === order.status}
-              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition"
+              onClick={handleStatusClick}
+              disabled={isLoading || status === order.status}
+              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition disabled:opacity-50"
             >
-              {loading ? "Updating..." : "Update Status"}
+              {isLoading ? "Updating..." : "Update Status"}
             </button>
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onConfirm={handleStatusUpdate}
+        title="Update Order Status"
+        message={`Are you sure you want to update the status to ${status}? This action cannot be undone.`}
+        confirmText="Update"
+        cancelText="Cancel"
+        isLoading={isLoading}
+      />
     </div>
   )
 }

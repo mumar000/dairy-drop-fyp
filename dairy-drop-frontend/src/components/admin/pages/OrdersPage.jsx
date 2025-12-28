@@ -1,53 +1,52 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Eye } from "lucide-react"
 import OrderDetailModal from "../OrderDetailModal.jsx"
 import Loader from "../Loader.jsx"
+import { useGetOrdersQuery } from "../../../api/adminApi.js"
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [statusFilter, setStatusFilter] = useState("all")
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  const fetchOrders = async () => {
-    try {
-      const token = JSON.parse(localStorage.getItem("userInfo"))?.token
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
-
-      const response = await fetch(`${baseUrl}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      const data = await response.json()
-      setOrders(data.orders || [])
-    } catch (error) {
-      toast.error("Failed to load orders")
-      console.error("Orders error:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery()
 
   const getStatusColor = (status) => {
+    // Convert status to capitalized format for color mapping
+    const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
     const colors = {
       Pending: "bg-yellow-100 text-yellow-800",
-      Processing: "bg-blue-100 text-blue-800",
+      Confirmed: "bg-blue-100 text-blue-800", // Backend uses "Confirmed" for what frontend calls "Processing"
       Shipped: "bg-purple-100 text-purple-800",
       Delivered: "bg-green-100 text-green-800",
       Cancelled: "bg-red-100 text-red-800",
     }
-    return colors[status] || "bg-gray-100 text-gray-800"
+    return colors[capitalizedStatus] || "bg-gray-100 text-gray-800"
   }
 
-  const filteredOrders = statusFilter === "all" ? orders : orders.filter((order) => order.status === statusFilter)
+  const ordersList = Array.isArray(orders?.orders) ? orders.orders : []
 
-  if (loading) {
+  // Filter orders based on status, handling both frontend and backend status formats
+  const filteredOrders = statusFilter === "all"
+    ? ordersList
+    : ordersList.filter((order) => {
+        // Convert both to lowercase for comparison to handle different formats
+        const orderStatusLower = order.status.toLowerCase();
+        const filterStatusLower = statusFilter.toLowerCase();
+
+        // Map frontend "processing" to backend "confirmed"
+        if (filterStatusLower === "processing") {
+          return orderStatusLower === "confirmed";
+        }
+        return orderStatusLower === filterStatusLower;
+      })
+
+  if (isLoading) {
     return <Loader text={"Loading Orders"} />
+  }
+
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Failed to load orders</div>
   }
 
   return (
@@ -55,11 +54,11 @@ const OrdersPage = () => {
       <h2 className="text-2xl font-bold text-gray-800 mb-8">Orders</h2>
 
       <div className="mb-6 flex gap-2">
-        {["all", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map((status) => (
+        {["all", "pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${statusFilter === status ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
+            className={`px-4 py-2 rounded-lg font-medium transition ${statusFilter.toLowerCase() === status.toLowerCase() ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
               }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -87,7 +86,7 @@ const OrdersPage = () => {
                 <td className="px-6 py-3 font-bold text-gray-800">${order.totalAmount?.toFixed(2)}</td>
                 <td className="px-6 py-3">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                    {order.status}
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
                 </td>
                 <td className="px-6 py-3 text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</td>
@@ -111,7 +110,7 @@ const OrdersPage = () => {
         </div>
       )}
 
-      {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+      {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} refetch={refetch} />}
     </div>
   )
 }

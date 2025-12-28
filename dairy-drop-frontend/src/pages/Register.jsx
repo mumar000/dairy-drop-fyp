@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useRegisterMutation } from '@/api/authApi.js'
 import { setCredentials } from '@/features/auth/authSlice.js'
 import registerImage from '../assets/images/logo.jpg'
@@ -20,6 +20,16 @@ export default function Register() {
   const [register, { isLoading }] = useRegisterMutation()
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // If user is already logged in, redirect to appropriate page
+  if (userInfo && userInfo.user) {
+    if (userInfo.user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/");
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -51,8 +61,15 @@ export default function Register() {
       }).unwrap()
 
       dispatch(setCredentials({ token: res.token, user: res.user }))
-      toast.success("Registration Successfull")
-      navigate('/')
+
+      // Redirect based on user role after successful registration
+      if (res.user.role === "admin") {
+        toast.success("Admin registration successful!")
+        navigate("/admin/dashboard")
+      } else {
+        toast.success("Registration successful!")
+        navigate("/")
+      }
     } catch (e) {
       toast.error(e?.data?.message || 'Registration failed')
     }
