@@ -204,7 +204,7 @@ const ProductForm = ({ product, onClose }) => {
                 <div className="flex flex-col items-center justify-center">
                   <Upload className="w-10 h-10 text-gray-400 mb-2" />
                   <p className="text-gray-600">Click to upload images</p>
-                  <p className="text-sm text-gray-500">Supports multiple files (JPG, PNG, WEBP)</p>
+                  <p className="text-sm text-gray-500">Supports multiple files (JPG, PNG, WEBP, AVIF)</p>
                 </div>
               </label>
             </div>
