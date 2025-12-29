@@ -12,15 +12,18 @@ let cached = {
 async function initApp() {
   // Check if JWT_SECRET is secure in production
   if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'change-me') {
-    console.error('Warning: insecure JWT_SECRET in production');
-    // In a serverless environment, we can't exit the process, so we'll log a warning
-    // The application should still work but with a warning
+    console.warn('Warning: insecure JWT_SECRET in production. Please update your environment variables.');
   }
 
   // Connect to database if not already connected
   if (!cached.dbConnected) {
-    await connectToDatabase();
-    cached.dbConnected = true;
+    try {
+      await connectToDatabase();
+      cached.dbConnected = true;
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      throw error;
+    }
   }
 
   // Create the Express app if not already created
