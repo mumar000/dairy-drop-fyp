@@ -7,7 +7,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'dairy-drop', // Folder in Cloudinary to store images
-    allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+    allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
     transformation: [
       { width: 800, height: 600, crop: 'limit' } // Limit image size
     ]
@@ -33,7 +33,7 @@ export const uploadToCloudinary = async (filePath) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: 'dairy-drop',
-      allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+      allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
       transformation: [
         { width: 800, height: 600, crop: 'limit' }
       ]
@@ -51,7 +51,7 @@ export const uploadMultipleToCloudinary = async (files) => {
     const uploadPromises = files.map(file =>
       cloudinary.uploader.upload(file.path, {
         folder: 'dairy-drop',
-        allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+        allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
         transformation: [
           { width: 800, height: 600, crop: 'limit' }
         ]
