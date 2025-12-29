@@ -113,13 +113,16 @@ function sanitizeUser(user) {
 export const getCart = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
 
-  // Update inStock for each cart item based on current product data
+  // Update inStock and image for each cart item based on current product data
   if (user && user.cart && user.cart.length > 0) {
-
     for (let cartItem of user.cart) {
       const product = await Product.findById(cartItem.product);
       if (product) {
         cartItem.inStock = product.inStock;
+        // Add image if it doesn't exist in the cart item
+        if (!cartItem.image) {
+          cartItem.image = product.images?.[0] || null;
+        }
       }
     }
   }
@@ -140,6 +143,7 @@ export const addToCart = asyncHandler(async (req, res) => {
     product: new mongoose.Types.ObjectId(productId),
     name: product.name,
     price: product.price,
+    image: product.images?.[0] || null,  // Add image field from product
     inStock: product.inStock,  // Add inStock field
     quantity
   });

@@ -12,14 +12,26 @@ export const placeOrder = asyncHandler(async (req, res) => {
   let orderItems = [];
   if (fromCart || (!items || items.length === 0)) {
     if (!user.cart.length) return res.status(400).json({ message: 'Cart is empty' });
-    orderItems = user.cart.map((c) => ({ product: c.product, name: c.name, price: c.price, quantity: c.quantity }));
+    orderItems = user.cart.map((c) => ({
+      product: c.product,
+      name: c.name,
+      price: c.price,
+      quantity: c.quantity,
+      image: c.image  // Include image from cart item
+    }));
   } else {
     // items provided: fetch product snapshots
     const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } });
     orderItems = items.map((i) => {
       const p = products.find((pp) => String(pp._id) === i.productId);
       if (!p) throw Object.assign(new Error('Product not found'), { status: 404 });
-      return { product: p._id, name: p.name, price: p.price, quantity: i.quantity };
+      return {
+        product: p._id,
+        name: p.name,
+        price: p.price,
+        quantity: i.quantity,
+        image: p.images?.[0] || null  // Include image from product
+      };
     });
   }
 
