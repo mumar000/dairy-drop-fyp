@@ -14,6 +14,18 @@ Make sure to set these environment variables in your Vercel project settings:
 - `RATE_LIMIT_MAX`: Max requests per window
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: For image uploads (if needed)
 
+## Critical: JWT_SECRET Configuration
+
+⚠️ **IMPORTANT**: The application will crash with a "FUNCTION_INVOCATION_FAILED" error if `JWT_SECRET` is still set to 'change-me' in production.
+
+Before deploying to Vercel, make sure to:
+1. Go to your Vercel dashboard
+2. Navigate to your project settings
+3. Go to "Environment Variables"
+4. Add a new environment variable:
+   - Key: `JWT_SECRET`
+   - Value: A strong, random secret string (e.g., use a password generator)
+
 ## Important Notes
 
 1. The application will refuse to start in production if `JWT_SECRET` is still set to 'change-me'
