@@ -1,6 +1,15 @@
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import hpp from 'hpp';
+import rateLimit from 'express-rate-limit';
 import { connectToDatabase } from '../../src/db/connection.js';
 import { env } from '../../src/config/env.js';
+import router from '../../src/routes/index.js';
+import { notFound } from '../../src/middlewares/not-found.middleware.js';
+import { errorHandler } from '../../src/middlewares/error.middleware.js';
 import mongoose from 'mongoose';
 
 // Store the app instance to avoid recreating it on every invocation (for performance in serverless environment)
@@ -30,12 +39,11 @@ async function initApp() {
   if (!cached.app) {
     const app = express();
 
-    // Import and apply all middleware directly instead of using createApp
-    // to avoid issues with process.exit() in serverless environment
+    // Apply all middleware directly
     app.disable('x-powered-by');
+    app.use(helmet());
 
-    // Import CORS
-    const cors = (await import('cors')).default;
+    // CORS: allow configured origin(s)
     const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
     app.use(cors({
       origin: (origin, cb) => {
@@ -48,23 +56,13 @@ async function initApp() {
 
     app.use(express.json({ limit: '1mb' }));
     app.use(express.urlencoded({ extended: true }));
-
-    // Import and use other middleware
-    const helmet = (await import('helmet')).default;
-    app.use(helmet());
-
-    const hpp = (await import('hpp')).default;
     app.use(hpp());
-
-    const compression = (await import('compression')).default;
     app.use(compression());
 
-    const morgan = (await import('morgan')).default;
     const logFormat = env.NODE_ENV === 'production' ? 'combined' : 'dev';
     app.use(morgan(logFormat));
 
-    // Import rate limiting
-    const rateLimit = (await import('express-rate-limit')).default;
+    // Basic rate limiter
     const limiter = rateLimit({
       windowMs: env.RATE_LIMIT_WINDOW_MS,
       max: env.RATE_LIMIT_MAX,
@@ -78,13 +76,9 @@ async function initApp() {
       res.json({ name: 'Dairy Drop API', status: 'ok' });
     });
 
-    // Import and mount all routes
-    const router = (await import('../../src/routes/index.js')).default;
+    // Mount API with "/api" prefix
     app.use('/api', router);
 
-    // Import and use error handling middleware
-    const { notFound } = await import('../../src/middlewares/not-found.middleware.js');
-    const { errorHandler } = await import('../../src/middlewares/error.middleware.js');
     app.use(notFound);
     app.use(errorHandler);
 
