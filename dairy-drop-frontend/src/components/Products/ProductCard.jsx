@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
-export const ProductCard = ({ product, index, onAddToCart }) => {
+export const ProductCard = ({ product, index, onAddToCart, isAdding = false }) => {
     const productId = product._id || product.id;
     const navigate = useNavigate();
     const userInfo = useSelector((state) => state.auth.userInfo);
@@ -87,16 +87,16 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
                         e.stopPropagation();
                         handleAddToCart(product);
                     }}
-                    disabled={product.inStock === 0}
+                    disabled={product.inStock === 0 || isAdding}
                     className={`w-full px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${product.inStock > 0
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
                         <path d='M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' />
                     </svg>
-                    {product.inStock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    {isAdding ? 'Adding...' : (product.inStock > 0 ? 'Add to Cart' : 'Out of Stock')}
                 </button>
             </div>
         </div>

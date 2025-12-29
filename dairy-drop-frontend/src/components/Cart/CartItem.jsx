@@ -18,8 +18,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveFromCart }) => {
     onRemoveFromCart(item.product);
   };
 
-  // Use product image if available, otherwise use cart item image or placeholder
-  const image = product?.image || item.image || 'https://placehold.co/100x100';
+  // Use cart item image first, then product image if available, otherwise use placeholder
+  const image = item.image || product?.image || 'https://placehold.co/100x100';
   // Use product stock if available
   const inStock = product?.inStock ?? item.inStock ?? 999; // Default to high number if not available
 

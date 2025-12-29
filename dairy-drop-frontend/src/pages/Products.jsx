@@ -23,6 +23,7 @@ const Products = () => {
     const [sortBy, setSortBy] = useState('-createdAt')
     const [currentPage, setCurrentPage] = useState(1)
     const [limit] = useState(12)
+    const [addingProductIds, setAddingProductIds] = useState(new Set())
 
     // Initialize filters from URL parameters on component mount
     useEffect(() => {
@@ -70,9 +71,12 @@ const Products = () => {
         })
     }
 
-    const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation()
+    const [addToCart] = useAddToCartMutation()
 
     const handleAddToCart = async (product) => {
+        // Add product ID to the loading set
+        setAddingProductIds(prev => new Set(prev).add(product._id))
+
         try {
             await addToCart({
                 productId: product._id,
@@ -84,6 +88,13 @@ const Products = () => {
         } catch (error) {
             console.error('Error adding to cart:', error)
             toast.error('Failed to add item to cart')
+        } finally {
+            // Remove product ID from the loading set
+            setAddingProductIds(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(product._id)
+                return newSet
+            })
         }
     }
 
@@ -226,14 +237,18 @@ const Products = () => {
                                 {products.length > 0 ? (
                                     <>
                                         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                                            {products.map((product, index) => (
-                                                <ProductCard
-                                                    key={product._id}
-                                                    product={product}
-                                                    index={index}
-                                                    onAddToCart={handleAddToCart}
-                                                />
-                                            ))}
+                                            {products.map((product, index) => {
+                                                const isAdding = addingProductIds.has(product._id);
+                                                return (
+                                                    <ProductCard
+                                                        key={product._id}
+                                                        product={product}
+                                                        index={index}
+                                                        onAddToCart={handleAddToCart}
+                                                        isAdding={isAdding}
+                                                    />
+                                                )
+                                            })}
                                         </div>
 
                                         {/* Pagination */}
