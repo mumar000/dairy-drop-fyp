@@ -24,7 +24,6 @@ function AppContent() {
   const userInfo = useSelector((s) => s.auth.userInfo)
   const { cartData, isLoading, isError } = useSyncCartWithStore()
 
-  // Only load cart if user is authenticated
   if (userInfo?.token && (isLoading || isError)) {
     // We can return a loading state here if needed
     // For now, just render the components and let the cart load in the background
