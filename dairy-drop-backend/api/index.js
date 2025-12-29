@@ -4,113 +4,54 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import hpp from 'hpp';
-import rateLimit from 'express-rate-limit';
-import { connectToDatabase } from '../../src/db/connection.js';
-import { env } from '../../src/config/env.js';
-import router from '../../src/routes/index.js';
-import { notFound } from '../../src/middlewares/not-found.middleware.js';
-import { errorHandler } from '../../src/middlewares/error.middleware.js';
+import { connectToDatabase } from '../src/db/connection.js'; // Fixed path
+import { env } from '../src/config/env.js';                 // Fixed path
+import router from '../src/routes/index.js';                // Fixed path
+import { notFound } from '../src/middlewares/not-found.middleware.js';
+import { errorHandler } from '../src/middlewares/error.middleware.js';
 import mongoose from 'mongoose';
 
-// Store the app instance to avoid recreating it on every invocation (for performance in serverless environment)
-let cached = {
-  app: null,
-  dbConnected: false
-};
+const app = express();
 
-async function initApp() {
-  // Check if JWT_SECRET is secure in production
-  if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'change-me') {
-    console.warn('Warning: insecure JWT_SECRET in production. Please update your environment variables.');
-  }
+// Standard Middleware
+app.disable('x-powered-by');
+app.use(helmet());
 
-  // Connect to database if not already connected
-  if (!cached.dbConnected) {
-    try {
-      await connectToDatabase();
-      cached.dbConnected = true;
-    } catch (error) {
-      console.error('Database connection failed:', error);
-      throw error;
-    }
-  }
+const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || origins.includes('*') || origins.includes(origin)) return cb(null, true);
+    return cb(new Error('CORS not allowed'), false);
+  },
+  credentials: true,
+}));
 
-  // Create the Express app if not already created
-  if (!cached.app) {
-    const app = express();
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(hpp());
+app.use(compression());
+app.use(morgan('dev'));
 
-    // Apply all middleware directly
-    app.disable('x-powered-by');
-    app.use(helmet());
+// Routes
+app.get('/', (req, res) => res.json({ name: 'Dairy Drop API', status: 'ok' }));
+app.use('/api', router);
 
-    // CORS: allow configured origin(s)
-    const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
-    app.use(cors({
-      origin: (origin, cb) => {
-        if (!origin) return cb(null, true);
-        if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
-        return cb(new Error('CORS not allowed'), false);
-      },
-      credentials: true,
-    }));
+// Error Handling
+app.use(notFound);
+app.use(errorHandler);
 
-    app.use(express.json({ limit: '1mb' }));
-    app.use(express.urlencoded({ extended: true }));
-    app.use(hpp());
-    app.use(compression());
-
-    const logFormat = env.NODE_ENV === 'production' ? 'combined' : 'dev';
-    app.use(morgan(logFormat));
-
-    // Basic rate limiter
-    const limiter = rateLimit({
-      windowMs: env.RATE_LIMIT_WINDOW_MS,
-      max: env.RATE_LIMIT_MAX,
-      standardHeaders: true,
-      legacyHeaders: false
-    });
-    app.use(limiter);
-
-    // Add the root route
-    app.get('/', (_req, res) => {
-      res.json({ name: 'Dairy Drop API', status: 'ok' });
-    });
-
-    // Mount API with "/api" prefix
-    app.use('/api', router);
-
-    app.use(notFound);
-    app.use(errorHandler);
-
-    cached.app = app;
-  }
-
-  return cached.app;
-}
-
+// Serverless Handler
 export default async function handler(req, res) {
   try {
-    // Initialize the app
-    const app = await initApp();
+    // 1. Ensure DB is connected
+    if (mongoose.connection.readyState !== 1) {
+      await connectToDatabase();
+    }
 
-    // Handle the request with the Express app
-    await new Promise((resolve, reject) => {
-      app(req, res, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    // 2. Handle the request
+    return app(req, res);
   } catch (error) {
-    console.error('Serverless function error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: error.message
-    });
+    console.error('Vercel Function Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 }
-
-export const config = {
-  api: {
-    externalResolver: true,
-  },
-};
