@@ -16,6 +16,6 @@ pnpm-debug.log*
 
 # Env
 .env
-.env.*.local
+.env.local
 
 combined_project_code.txt
