@@ -109,6 +109,15 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+    updateUserStatus: builder.mutation({
+      query: ({ id, isActive }) => ({
+        url: `/users/${id}/status`,
+        method: 'PATCH',
+        body: { isActive },
+        headers: { 'Content-Type': 'application/json' },
+      }),
+      invalidatesTags: ['User'],
+    }),
 
     // Orders
     getOrders: builder.query({
@@ -142,6 +151,7 @@ export const {
   useGetUsersQuery,
   useUpdateUserRoleMutation,
   useDeleteUserMutation,
+  useUpdateUserStatusMutation,
 
   // Order queries/mutations
   useGetOrdersQuery,

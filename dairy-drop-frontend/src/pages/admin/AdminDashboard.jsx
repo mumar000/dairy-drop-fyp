@@ -8,6 +8,7 @@ import DashboardHome from "../../components/admin/pages/DashboardHome.jsx"
 import ProductsPage from "../../components/admin/pages/ProductsPage.jsx"
 import OrdersPage from "../../components/admin/pages/OrdersPage.jsx"
 import UsersPage from "../../components/admin/pages/UsersPage.jsx"
+import ReviewsPage from "../../components/admin/pages/ReviewsPage.jsx"
 
 const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState("dashboard")
@@ -37,6 +38,8 @@ const AdminDashboard = () => {
         return <OrdersPage />
       case "users":
         return <UsersPage />
+      case "reviews":
+        return <ReviewsPage />
       default:
         return <DashboardHome />
     }

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { logout } from "../../features/auth/authSlice.js"
 import { toast } from "sonner"
-import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, Menu } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, LogOut, Menu } from "lucide-react"
 import { useState } from "react"
 
 const AdminSidebar = ({ currentPage, setCurrentPage }) => {
@@ -15,6 +15,7 @@ const AdminSidebar = ({ currentPage, setCurrentPage }) => {
     { id: "products", label: "Products", icon: Package },
     { id: "orders", label: "Orders", icon: ShoppingCart },
     { id: "users", label: "Users", icon: Users },
+    { id: "reviews", label: "Reviews", icon: MessageSquare },
   ]
 
   const handleLogout = () => {

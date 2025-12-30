@@ -3,9 +3,10 @@ import { useAddToCartMutation } from '../api/cartApi.js'
 import { Sidebar } from '../components/Products/Sidebar'
 import { ProductCard } from '../components/Products/ProductCard'
 import { Pagination } from '../components/Products/Pagination'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useDebounce } from '../hooks/useDebounce.js'
 
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -25,6 +26,14 @@ const Products = () => {
     const [limit] = useState(12)
     const [addingProductIds, setAddingProductIds] = useState(new Set())
 
+    // State for search input to enable real-time updates
+    const [searchInput, setSearchInput] = useState('')
+
+    useEffect(() => {
+        // Only sync when URL changes externally (navbar)
+        setSearchInput(searchQuery)
+    }, [searchQuery])
+
     // Initialize filters from URL parameters on component mount
     useEffect(() => {
         if (categoryFromUrl) {
@@ -35,8 +44,11 @@ const Products = () => {
         }
     }, [categoryFromUrl])
 
-    // Convert our filters to API query parameters
-    const queryParams = {
+    // Debounce the search input - allow search with single character, minimal delay for real-time feel
+    const debouncedSearchQuery = useDebounce(searchInput.length >= 1 ? searchInput : '', 150);
+
+    // Convert our filters to API query parameters - memoize to prevent unnecessary refetches
+    const queryParams = useMemo(() => ({
         page: currentPage,
         limit: limit,
         sort: sortBy,
@@ -44,9 +56,9 @@ const Products = () => {
         minPrice: filters.priceRange.min || undefined,
         maxPrice: filters.priceRange.max || undefined,
         inStock: filters.inStockOnly ? 1 : undefined,
-        ratings: filters.ratings.length > 0 ? filters.ratings.join(',') : undefined,
-        q: searchQuery || undefined, // Add search parameter (backend expects 'q'),
-    }
+        averageRating: filters.ratings.length > 0 ? filters.ratings[0] : undefined, // Filter by minimum average rating
+        q: debouncedSearchQuery || undefined, // Use debounced search query (backend expects 'q'),
+    }), [currentPage, limit, sortBy, filters, debouncedSearchQuery])
 
     const { data, isLoading, isError, error, refetch } = useListProductsQuery(queryParams)
 
@@ -62,6 +74,7 @@ const Products = () => {
             ratings: [],
             inStockOnly: false
         })
+        setSearchInput('') // Clear search input
         // Clear search and category parameters from URL
         setSearchParams(prev => {
             const newParams = new URLSearchParams(prev)
@@ -106,17 +119,9 @@ const Products = () => {
 
     // Handle search input change
     const handleSearchChange = (e) => {
-        const value = e.target.value
-        if (value.trim()) {
-            setSearchParams({ q: value.trim() })
-        } else {
-            setSearchParams(prev => {
-                const newParams = new URLSearchParams(prev)
-                newParams.delete('q')
-                return newParams
-            })
-        }
+        setSearchInput(e.target.value)
     }
+
 
     // Handle category change from sidebar
     const handleCategoryChange = (selectedCategories) => {
@@ -150,6 +155,35 @@ const Products = () => {
         }
     }, [searchQuery])
 
+    // Handle filter changes - trigger refetch when filters change
+    useEffect(() => {
+        // Reset to first page when filters change
+        setCurrentPage(1)
+    }, [filters])
+
+    // Refetch data when filters change
+    useEffect(() => {
+        refetch();
+    }, [queryParams, refetch])
+
+    useEffect(() => {
+        if (debouncedSearchQuery) {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev)
+                params.set('q', debouncedSearchQuery)
+                return params
+            })
+        } else {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev)
+                params.delete('q')
+                return params
+            })
+        }
+
+        setCurrentPage(1)
+    }, [debouncedSearchQuery])
+
     return (
         <div className='bg-gray-50 min-h-screen py-8'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -157,12 +191,12 @@ const Products = () => {
                 {/* Header */}
                 <div className='mb-8'>
                     <h1 className='text-4xl font-bold text-gray-900 mb-2'>
-                        {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+                        {debouncedSearchQuery ? `Search Results for "${debouncedSearchQuery}"` : 'All Products'}
                     </h1>
                     <p className='text-gray-600'>
                         {isLoading ? 'Loading products...' :
-                         products.length > 0 ? `Showing ${products.length} of ${totalProducts} products` :
-                         searchQuery ? `No products found for "${searchQuery}"` : `Showing ${products.length} of ${totalProducts} products`}
+                            products.length > 0 ? `Showing ${products.length} of ${totalProducts} products` :
+                                debouncedSearchQuery ? `No products found for "${debouncedSearchQuery}"` : `Showing ${products.length} of ${totalProducts} products`}
                     </p>
                 </div>
 
@@ -184,16 +218,17 @@ const Products = () => {
                             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                                 {/* Search Input */}
                                 <div className='relative flex-1 max-w-md'>
-                                    <input
+                                    {/* <input
                                         type='text'
-                                        value={searchQuery}
+                                        value={searchInput}
                                         onChange={handleSearchChange}
                                         placeholder='Search products...'
                                         className='w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                                     />
                                     <svg className='absolute left-3 top-2.5 w-5 h-5 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
-                                    </svg>
+                                    </svg> */}
+                                    <p className='text-xl font-medium pl-2'>Dairy Drop - Products</p>
                                 </div>
 
                                 {/* Sort Dropdown */}
@@ -264,10 +299,10 @@ const Products = () => {
                                     <div className='flex flex-col items-center justify-center py-20'>
                                         <div className='text-center'>
                                             <h3 className='text-2xl font-bold text-gray-900 mb-2'>
-                                                {searchQuery ? `No products found for "${searchQuery}"` : 'No products found'}
+                                                {debouncedSearchQuery ? `No products found for "${debouncedSearchQuery}"` : 'No products found'}
                                             </h3>
                                             <p className='text-gray-600 mb-6'>
-                                                {searchQuery
+                                                {debouncedSearchQuery
                                                     ? 'We couldn\'t find any products matching your search. Try different keywords.'
                                                     : 'We couldn\'t find any products matching your search criteria.'}
                                             </p>
@@ -280,18 +315,17 @@ const Products = () => {
                                                         ratings: [],
                                                         inStockOnly: false
                                                     });
+                                                    setSearchInput('')
                                                     setSortBy('-createdAt');
                                                     setCurrentPage(1);
                                                     // Clear search parameter
-                                                    setSearchParams(prev => {
-                                                        const newParams = new URLSearchParams(prev)
-                                                        newParams.delete('search')
-                                                        return newParams
-                                                    })
+                                                    const newParams = new URLSearchParams(searchParams);
+                                                    newParams.delete('q');
+                                                    setSearchParams(newParams);
                                                 }}
                                                 className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
                                             >
-                                                {searchQuery ? 'Clear Search' : 'Clear all filters'}
+                                                {debouncedSearchQuery ? 'Clear Search' : 'Clear all filters'}
                                             </button>
                                         </div>
                                     </div>

@@ -135,22 +135,23 @@ export const Sidebar = ({ filters, setFilters, onClearAll, onCategoryChange }) =
                     {[4, 3, 2, 1].map((rating) => (
                         <label key={rating} className='flex items-center cursor-pointer group'>
                             <input
-                                type='checkbox'
+                                type='radio'
+                                name='rating'
                                 checked={filters.ratings.includes(rating)}
                                 onChange={(e) => {
                                     if (e.target.checked) {
                                         setFilters(prev => ({
                                             ...prev,
-                                            ratings: [...prev.ratings, rating]
+                                            ratings: [rating] // Only one rating filter at a time
                                         }));
                                     } else {
                                         setFilters(prev => ({
                                             ...prev,
-                                            ratings: prev.ratings.filter(r => r !== rating)
+                                            ratings: [] // Clear ratings when unselected
                                         }));
                                     }
                                 }}
-                                className='w-4 h-4 text-blue-600 rounded cursor-pointer'
+                                className='w-4 h-4 text-blue-600 rounded-full cursor-pointer'
                             />
                             <div className='ml-3 flex items-center'>
                                 <span className='text-yellow-500 mr-1'>★</span>
@@ -158,6 +159,24 @@ export const Sidebar = ({ filters, setFilters, onClearAll, onCategoryChange }) =
                             </div>
                         </label>
                     ))}
+                    {/* Add option to clear rating filter */}
+                    <label className='flex items-center cursor-pointer group'>
+                        <input
+                            type='radio'
+                            name='rating'
+                            checked={filters.ratings.length === 0}
+                            onChange={() => {
+                                setFilters(prev => ({
+                                    ...prev,
+                                    ratings: []
+                                }));
+                            }}
+                            className='w-4 h-4 text-blue-600 rounded-full cursor-pointer'
+                        />
+                        <div className='ml-3 flex items-center'>
+                            <span className='text-gray-700 group-hover:text-gray-900'>All Ratings</span>
+                        </div>
+                    </label>
                 </div>
             </div>
 

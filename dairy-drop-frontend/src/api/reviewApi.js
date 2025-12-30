@@ -42,6 +42,32 @@ export const reviewApi = baseApi.injectEndpoints({
         { type: 'Product', id: productId }
       ],
     }),
+    // Admin endpoints
+    getAllReviews: builder.query({
+      query: ({ page = 1, limit = 10, searchTerm = '' }) => {
+        let url = `/reviews/admin?page=${page}&limit=${limit}`;
+        if (searchTerm) {
+          url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        return url;
+      },
+      providesTags: ['Review'],
+    }),
+    moderateReview: builder.mutation({
+      query: ({ id, isApproved }) => ({
+        url: `/reviews/${id}/moderate`,
+        method: 'PATCH',
+        body: { isApproved },
+      }),
+      invalidatesTags: ['Review', 'Product'],
+    }),
+    deleteReview: builder.mutation({
+      query: (id) => ({
+        url: `/reviews/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Review', 'Product'],
+    }),
   }),
 })
 
@@ -50,4 +76,8 @@ export const {
   useUpdateMyReviewMutation,
   useListProductReviewsQuery,
   useDeleteMyReviewMutation,
+  // Admin hooks
+  useGetAllReviewsQuery,
+  useModerateReviewMutation,
+  useDeleteReviewMutation,
 } = reviewApi

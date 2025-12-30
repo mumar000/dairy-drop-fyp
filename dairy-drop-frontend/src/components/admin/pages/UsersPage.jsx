@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { Trash2, Shield } from "lucide-react"
+import { Trash2, Shield, UserCheck, UserX } from "lucide-react"
 import Loader from "../Loader.jsx"
 import ConfirmationModal from "../ConfirmationModal.jsx"
-import { useGetUsersQuery, useUpdateUserRoleMutation, useDeleteUserMutation } from "../../../api/adminApi.js"
+import { useGetUsersQuery, useUpdateUserRoleMutation, useDeleteUserMutation, useUpdateUserStatusMutation } from "../../../api/adminApi.js"
 
 const UsersPage = () => {
   const [selectedUser, setSelectedUser] = useState(null)
@@ -11,10 +11,13 @@ const UsersPage = () => {
   const [newRole, setNewRole] = useState("user")
   const [userToDelete, setUserToDelete] = useState(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [userToToggleStatus, setUserToToggleStatus] = useState(null)
+  const [showStatusModal, setShowStatusModal] = useState(false)
 
   const { data: users, isLoading, isError, refetch } = useGetUsersQuery()
   const [updateUserRole, { isLoading: isUpdatingRole }] = useUpdateUserRoleMutation()
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation()
+  const [updateUserStatus, { isLoading: isUpdatingStatus }] = useUpdateUserStatusMutation()
 
   const handleUpdateRole = async () => {
     try {
@@ -22,9 +25,26 @@ const UsersPage = () => {
       setShowRoleModal(false)
       setSelectedUser(null)
       toast.success("User role updated successfully")
+      refetch()
     } catch (error) {
       toast.error("Failed to update user role")
       console.error("Update error:", error)
+    }
+  }
+
+  const handleUpdateUserStatus = async () => {
+    if (!userToToggleStatus) return
+
+    try {
+      await updateUserStatus({ id: userToToggleStatus._id, isActive: !userToToggleStatus.isActive }).unwrap()
+      setShowStatusModal(false)
+      setUserToToggleStatus(null)
+      toast.success(`User account ${userToToggleStatus.isActive ? 'deactivated' : 'activated'} successfully`)
+      refetch()
+    } catch (error) {
+      const errorMessage = error?.data?.message || `Failed to ${userToToggleStatus.isActive ? 'deactivate' : 'activate'} user`
+      toast.error(errorMessage)
+      console.error("Status update error:", error)
     }
   }
 
@@ -36,6 +56,7 @@ const UsersPage = () => {
       toast.success("User deleted successfully")
       setUserToDelete(null)
       setShowDeleteModal(false)
+      refetch()
     } catch (error) {
       toast.error("Failed to delete user")
       console.error("Delete error:", error)
@@ -65,6 +86,7 @@ const UsersPage = () => {
               <th className="px-6 py-3 text-left font-semibold text-gray-700">Email</th>
               <th className="px-6 py-3 text-left font-semibold text-gray-700">Phone</th>
               <th className="px-6 py-3 text-left font-semibold text-gray-700">Role</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
               <th className="px-6 py-3 text-left font-semibold text-gray-700">Joined</th>
               <th className="px-6 py-3 text-center font-semibold text-gray-700">Actions</th>
             </tr>
@@ -83,31 +105,55 @@ const UsersPage = () => {
                     {user.role}
                   </span>
                 </td>
+                <td className="px-6 py-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                  >
+                    {user.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
                 <td className="px-6 py-3 text-sm text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-3 text-center">
                   <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user)
-                        setNewRole(user.role)
-                        setShowRoleModal(true)
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Change role"
-                    >
-                      <Shield size={18} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setUserToDelete(user._id)
-                        setShowDeleteModal(true)
-                      }}
-                      disabled={isDeleting}
-                      className="text-red-600 hover:text-red-800 disabled:opacity-50"
-                      title="Delete user"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {user.role !== 'admin' ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setNewRole(user.role)
+                            setShowRoleModal(true)
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Change role"
+                        >
+                          <Shield size={18} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserToToggleStatus(user)
+                            setShowStatusModal(true)
+                          }}
+                          className={user.isActive ? "text-red-600 hover:text-red-800" : "text-green-600 hover:text-green-800"}
+                          title={user.isActive ? "Deactivate user" : "Activate user"}
+                        >
+                          {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserToDelete(user._id)
+                            setShowDeleteModal(true)
+                          }}
+                          disabled={isDeleting}
+                          className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                          title="Delete user"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Restricted</span>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -158,6 +204,45 @@ const UsersPage = () => {
                 className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition disabled:opacity-50"
               >
                 {isUpdatingRole ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStatusModal && userToToggleStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              {userToToggleStatus.isActive ? 'Deactivate User' : 'Activate User'}
+            </h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-3">
+                User: <strong>{userToToggleStatus.name}</strong>
+              </p>
+              <p className="text-sm text-gray-600">
+                {userToToggleStatus.isActive
+                  ? 'Are you sure you want to deactivate this user? They will not be able to log in.'
+                  : 'Are you sure you want to activate this user? They will be able to log in again.'}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowStatusModal(false)
+                  setUserToToggleStatus(null)
+                }}
+                disabled={isUpdatingStatus}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUserStatus}
+                disabled={isUpdatingStatus}
+                className={`flex-1 px-4 py-2 ${userToToggleStatus.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded-lg transition disabled:opacity-50`}
+              >
+                {isUpdatingStatus ? 'Processing...' : (userToToggleStatus.isActive ? 'Deactivate' : 'Activate')}
               </button>
             </div>
           </div>

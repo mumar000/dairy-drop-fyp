@@ -1,31 +1,72 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '@/features/auth/authSlice.js'
 import { selectCartItemCount } from '@/features/cart/cartSlice.js'
 import logo from "../assets/images/logo.jpg"
 import useAuth from '../hooks/useAuth'
 import { UserRound } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDebounce } from '../hooks/useDebounce.js'
 
 export default function NavBar() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const userInfo = useSelector((s) => s.auth.userInfo)
   const cartItemCount = useSelector(selectCartItemCount)
+  const [searchParams] = useSearchParams()
 
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+
+  // Initialize search input from URL params
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('q') || '';
+    setSearchInput(urlSearchQuery);
+  }, [searchParams]);
+
+  // Debounce the search input - allow search with single character, minimal delay for real-time feel
+  const debouncedSearchQuery = useDebounce(searchInput.length >= 1 ? searchInput : '', 150); // 150ms delay for near real-time
 
   const onLogout = () => {
     dispatch(logout())
     navigate('/')
   }
 
-  const handleSearch = (e) => {
+  // Handle search input change with debounced navigation
+  useEffect(() => {
+    // Only navigate if we're not already on the products page with the same search
+    const currentPath = window.location.pathname;
+    const currentSearch = searchParams.get('q') || '';
+
+    if (debouncedSearchQuery.trim() && !currentPath.includes('/products')) {
+      // Navigate to products page with search query if not already there
+      navigate(`/products?q=${encodeURIComponent(debouncedSearchQuery.trim())}`);
+    } else if (debouncedSearchQuery.trim() && currentPath.includes('/products') && currentSearch !== debouncedSearchQuery) {
+      // Update search query if already on products page but search term changed
+      navigate(`/products?q=${encodeURIComponent(debouncedSearchQuery.trim())}`);
+    } else if (!debouncedSearchQuery.trim() && currentPath.includes('/products') && currentSearch) {
+      // Clear search if on products page and search is cleared
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      navigate(`/products?${newParams.toString()}`);
+    }
+  }, [debouncedSearchQuery, navigate, searchParams]);
+
+  // Update searchInput when searchQuery from URL changes
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('q') || '';
+    setSearchInput(urlSearchQuery);
+  }, [searchParams]);
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(''); // Clear search after navigating
+    if (searchInput.trim().length >= 1) {
+      navigate(`/products?q=${encodeURIComponent(searchInput.trim())}`);
+    } else {
+      // Clear search parameter when input is empty
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      navigate(`/products?${newParams.toString()}`);
     }
   }
 
@@ -57,11 +98,11 @@ export default function NavBar() {
 
           {/* Search Bar */}
           <div className='hidden lg:flex items-center flex-1 max-w-sm ml-4'>
-            <form onSubmit={handleSearch} className='relative w-full'>
+            <form onSubmit={handleSearchSubmit} className='relative w-full'>
               <input
                 type='text'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder='Search products...'
                 className='w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
