@@ -1,6 +1,7 @@
 import { verifyToken } from '../utils/jwt.js';
+import { User } from '../models/user.model.js';
 
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Missing or invalid Authorization header' });
@@ -8,6 +9,13 @@ export function authenticate(req, res, next) {
   const token = header.slice(7);
   try {
     const payload = verifyToken(token);
+
+    // Check if user is still active
+    const user = await User.findById(payload.id).select('isActive');
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: 'Account is deactivated. Access denied.' });
+    }
+
     req.user = { id: payload.id, role: payload.role };
     next();
   } catch {

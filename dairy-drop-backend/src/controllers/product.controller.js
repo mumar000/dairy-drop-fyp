@@ -22,7 +22,9 @@ export const createProduct = asyncHandler(async (req, res) => {
 export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, minPrice, maxPrice, inStock, ratings, page = '1', limit = '12', sort = '-createdAt' } = req.query;
   const filter = { isActive: true };
-  if (q) filter.$text = { $search: q };
+  if (q) {
+    filter.name = { $regex: q, $options: 'i' };
+  }
   if (category) filter.category = category;
   if (minPrice || maxPrice) filter.price = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
   if (inStock) filter.inStock = { $gte: Number(inStock) };

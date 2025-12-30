@@ -20,6 +20,7 @@ export const login = asyncHandler(async (req, res) => {
   const { emailOrPhone, password } = loginSchema.parse(req.body);
   const user = await User.findOne({ $or: [{ email: emailOrPhone }, { phone: emailOrPhone }] });
   if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  if (!user.isActive) return res.status(401).json({ message: 'Account is deactivated. Access denied.' });
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
   const token = signToken({ id: String(user._id), role: user.role });

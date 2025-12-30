@@ -30,6 +30,7 @@ const UserSchema = new Schema(
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isActive: { type: Boolean, default: true },
     addresses: { type: [AddressSchema], default: [] },
     cart: { type: [CartItemSchema], default: [] },
   },

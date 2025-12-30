@@ -91,3 +91,43 @@ export const adminModerateReview = asyncHandler(async (req, res) => {
   if (review) await recomputeProductRating(String(review.product));
   res.json({ review });
 });
+
+export const getAllReviews = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const searchTerm = req.query.search || '';
+
+  const skip = (page - 1) * limit;
+
+  // Build query
+  let query = {};
+  if (searchTerm) {
+    query.$or = [
+      { comment: { $regex: searchTerm, $options: 'i' } },
+      { 'user.name': { $regex: searchTerm, $options: 'i' } },
+      { 'product.name': { $regex: searchTerm, $options: 'i' } },
+    ];
+  }
+
+  const reviews = await Review.find(query)
+    .populate('user', 'name email')
+    .populate('product', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Review.countDocuments(query);
+
+  res.json({ reviews, total });
+});
+
+export const adminDeleteReview = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const review = await Review.findByIdAndDelete(id);
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+
+  // Recalculate product rating after deletion
+  await recomputeProductRating(String(review.product));
+
+  res.json({ message: 'Review deleted successfully' });
+});
