@@ -4,6 +4,8 @@ PROJECT STRUCTURE:
 FILE CONTENTS:
 ==============
 
+    ├── .env
+    ├── .env.local
     ├── .gitignore
     ├── code-to-txt.py
     ├── combined_project_code.txt
@@ -13,7 +15,34 @@ FILE CONTENTS:
     ├── postcss.config.js
     ├── tailwind.config.js
     ├── txt-to-code.py
+    ├── vercel.json
     ├── vite.config.js
+
+--- START OF FILE: .env ---
+
+# Backend API Configuration
+VITE_API_BASE_URL=https://dairy-drop-fyp.vercel.app
+
+# Change this to deployed backend URL when going to production
+# VITE_API_BASE_URL=https://api.example.com
+
+--- END OF FILE: .env ---
+
+================================================================================
+
+
+--- START OF FILE: .env.local ---
+
+# Backend API Configuration
+VITE_API_BASE_URL=http://localhost:4000
+
+# Change this to deployed backend URL when going to production
+# VITE_API_BASE_URL=https://api.example.com
+
+--- END OF FILE: .env.local ---
+
+================================================================================
+
 
 --- START OF FILE: .gitignore ---
 
@@ -35,8 +64,9 @@ pnpm-debug.log*
 
 # Env
 .env
-.env.*.local
+.env.local
 
+combined_project_code.txt
 
 --- END OF FILE: .gitignore ---
 
@@ -180,7 +210,7 @@ if __name__ == "__main__":
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="./src/assets/images/logo.jpg" />
-  <title>Dairy Drop</title>
+  <title>Dairy Drop | Live Healthy Life with Fresh Dairy Items</title>
 </head>
 
 <body>
@@ -3218,6 +3248,22 @@ if __name__ == "__main__":
 ================================================================================
 
 
+--- START OF FILE: vercel.json ---
+
+{
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
+
+--- END OF FILE: vercel.json ---
+
+================================================================================
+
+
 --- START OF FILE: vite.config.js ---
 
 import { defineConfig, loadEnv } from 'vite'
@@ -3237,7 +3283,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api': {
-          target: env.VITE_PROXY_TARGET || 'http://localhost:4000',
+          target: env.VITE_API_BASE_URL || 'http://localhost:4000',
           changeOrigin: true,
         },
       },
@@ -3257,36 +3303,32 @@ export default defineConfig(({ mode }) => {
 
 --- START OF FILE: src\App.jsx ---
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Provider } from 'react-redux'
-import { store } from './store/index.js'
-import { useSyncCartWithStore } from './hooks/useSyncCartWithStore.js'
-import { useSelector } from 'react-redux'
-import Home from './pages/Home.jsx'
-import Login from './pages/Login.jsx'
-import Cart from './pages/Cart.jsx'
-// import ProductDetail from './pages/ProductDetail.jsx'
-// import Orders from './pages/Orders.jsx'
-// import AdminDashboard from './pages/admin/AdminDashboard.jsx'
-import NavBar from './components/NavBar.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
-
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { Provider, useSelector } from "react-redux"
 import { Toaster } from "sonner"
-import About from './pages/About.jsx'
-import Contact from './pages/Contact.jsx'
-import Products from './pages/Products.jsx'
-import Profile from './pages/Profile.jsx'
-import Register from './pages/Register.jsx'
-import Checkout from './pages/Checkout.jsx'
-import Orders from './pages/Orders.jsx'
-import ProductDetails from './pages/ProductDetails.jsx'
+import { store } from "./store/index.js"
+import AdminLogin from "./pages/admin/AdminLogin.jsx"
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx"
+import Home from "./pages/Home.jsx"
+import About from "./pages/About.jsx"
+import Contact from "./pages/Contact.jsx"
+import Login from "./pages/Login.jsx"
+import Register from "./pages/Register.jsx"
+import Products from "./pages/Products.jsx"
+import Profile from "./pages/Profile.jsx"
+import ProductDetails from "./pages/ProductDetails.jsx"
+import ProtectedRoute from "./components/ProtectedRoute.jsx"
+import Cart from "./pages/Cart.jsx"
+import Checkout from "./pages/Checkout.jsx"
+import Orders from "./pages/Orders.jsx"
+import NavBar from "./components/NavBar.jsx"
+import { useSyncCartWithStore } from "./hooks/useSyncCartWithStore.js"
 
 // Wrapper component to load cart data
 function AppContent() {
-  const userInfo = useSelector((s) => s.auth.userInfo);
-  const { cartData, isLoading, isError } = useSyncCartWithStore();
+  const userInfo = useSelector((s) => s.auth.userInfo)
+  const { cartData, isLoading, isError } = useSyncCartWithStore()
 
-  // Only load cart if user is authenticated
   if (userInfo?.token && (isLoading || isError)) {
     // We can return a loading state here if needed
     // For now, just render the components and let the cart load in the background
@@ -3294,21 +3336,19 @@ function AppContent() {
 
   return (
     <>
-      <NavBar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path='/contact' element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        <Route path='/products' element={<Products />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path='/products/:productId' element={<ProductDetails />} />
+        <Route path="/" element={<><NavBar /><Home /></>} />
+        <Route path="/about" element={<><NavBar /><About /></>} />
+        <Route path="/contact" element={<><NavBar /><Contact /></>} />
+        <Route path="/login" element={<><NavBar /><Login /></>} />
+        <Route path="/register" element={<><NavBar /><Register /></>} />
+        <Route path="/products" element={<><NavBar /><Products /></>} />
+        <Route path="/products/:productId" element={<><NavBar /><ProductDetails /></>} />
         <Route
           path="/cart"
           element={
             <ProtectedRoute>
-              {<Cart />}
+              <><NavBar /><Cart /></>
             </ProtectedRoute>
           }
         />
@@ -3316,7 +3356,7 @@ function AppContent() {
           path="/checkout"
           element={
             <ProtectedRoute>
-              {<Checkout />}
+              <><NavBar /><Checkout /></>
             </ProtectedRoute>
           }
         />
@@ -3324,15 +3364,25 @@ function AppContent() {
           path="/orders"
           element={
             <ProtectedRoute>
-              {<Orders />}
+              <><NavBar /><Orders /></>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/admin"
+          path="/profile"
           element={
-            <ProtectedRoute requireAdmin>
-              {/* <AdminDashboard /> */}
+            <ProtectedRoute>
+              <><NavBar /><Profile /></>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowAdmin>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -3352,7 +3402,6 @@ export default function App() {
     </Provider>
   )
 }
-
 
 
 --- END OF FILE: src\App.jsx ---
@@ -3406,12 +3455,180 @@ root.render(
 ================================================================================
 
     └── api/
+            ├── adminApi.js
             ├── authApi.js
             ├── baseApi.js
             ├── cartApi.js
             ├── orderApi.js
             ├── productsApi.js
             ├── reviewApi.js
+
+--- START OF FILE: src\api\adminApi.js ---
+
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+
+// Get the base URL from environment variable
+const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
+
+export const adminApi = createApi({
+  reducerPath: 'adminApi',
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${baseUrl}/api`,
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState().auth.userInfo?.token
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+      return headers
+    },
+  }),
+  tagTypes: ['Product', 'User', 'Order'],
+  endpoints: (builder) => ({
+    // Products
+    getProducts: builder.query({
+      query: () => '/products',
+      providesTags: ['Product'],
+    }),
+    createProduct: builder.mutation({
+      query: (productData) => {
+        // Check if productData is FormData (for file uploads)
+        const isFormData = productData instanceof FormData;
+
+        const req = {
+          url: '/products',
+          method: 'POST',
+          body: productData,
+        };
+
+        // Don't set Content-Type for FormData as it will be set automatically
+        if (!isFormData) {
+          req.headers = { 'Content-Type': 'application/json' };
+        }
+
+        return req;
+      },
+      invalidatesTags: ['Product'],
+    }),
+    updateProduct: builder.mutation({
+      query: (arg) => {
+        // Handle the case where arg is an object with id and _formData
+        if (arg && typeof arg === 'object' && arg.id) {
+          if (arg._formData) {
+            // This is the case where we have FormData in _formData property
+            const req = {
+              url: `/products/${arg.id}`,
+              method: 'PATCH',
+              body: arg._formData,
+            };
+            // Don't set Content-Type for FormData as it will be set automatically
+            return req;
+          } else {
+            // This is the case where arg contains the data directly
+            const { id, ...productData } = arg;
+            const isFormData = productData instanceof FormData;
+
+            const req = {
+              url: `/products/${id}`,
+              method: 'PATCH',
+              body: productData,
+            };
+
+            // Don't set Content-Type for FormData as it will be set automatically
+            if (!isFormData) {
+              req.headers = { 'Content-Type': 'application/json' };
+            }
+
+            return req;
+          }
+        } else {
+          // Handle case where arg is just FormData (shouldn't happen in our case)
+          throw new Error('Invalid arguments for updateProduct: id is required');
+        }
+      },
+      invalidatesTags: ['Product'],
+    }),
+    deleteProduct: builder.mutation({
+      query: (id) => ({
+        url: `/products/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
+    // Users
+    getUsers: builder.query({
+      query: () => '/users',
+      providesTags: ['User'],
+    }),
+    updateUserRole: builder.mutation({
+      query: ({ id, role }) => ({
+        url: `/users/${id}/role`,
+        method: 'PATCH',
+        body: { role },
+        headers: { 'Content-Type': 'application/json' },
+      }),
+      invalidatesTags: ['User'],
+    }),
+    deleteUser: builder.mutation({
+      query: (id) => ({
+        url: `/users/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['User'],
+    }),
+    updateUserStatus: builder.mutation({
+      query: ({ id, isActive }) => ({
+        url: `/users/${id}/status`,
+        method: 'PATCH',
+        body: { isActive },
+        headers: { 'Content-Type': 'application/json' },
+      }),
+      invalidatesTags: ['User'],
+    }),
+
+    // Orders
+    getOrders: builder.query({
+      query: () => '/orders',
+      providesTags: ['Order'],
+    }),
+    updateOrderStatus: builder.mutation({
+      query: ({ id, status }) => {
+        // Capitalize the status for backend compatibility
+        const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+        return {
+          url: `/orders/${id}/status`,
+          method: 'PATCH',
+          body: { status: capitalizedStatus },
+          headers: { 'Content-Type': 'application/json' },
+        };
+      },
+      invalidatesTags: ['Order'],
+    }),
+  }),
+})
+
+export const {
+  // Product queries/mutations
+  useGetProductsQuery,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+
+  // User queries/mutations
+  useGetUsersQuery,
+  useUpdateUserRoleMutation,
+  useDeleteUserMutation,
+  useUpdateUserStatusMutation,
+
+  // Order queries/mutations
+  useGetOrdersQuery,
+  useUpdateOrderStatusMutation,
+} = adminApi
+
+--- END OF FILE: src\api\adminApi.js ---
+
+================================================================================
+
 
 --- START OF FILE: src\api\authApi.js ---
 
@@ -3500,10 +3717,12 @@ export const {
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { getToken } from '../utils/storage.js'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
+    baseUrl: `${API_BASE_URL}/api`,
     prepareHeaders: (headers) => {
       const token = getToken()
       if (token) headers.set('authorization', `Bearer ${token}`)
@@ -3697,9 +3916,22 @@ export const reviewApi = baseApi.injectEndpoints({
         { type: 'Product', id: productId }
       ],
     }),
+    updateMyReview: builder.mutation({
+      query: ({ productId, rating, comment }) => ({
+        url: `/reviews/product/${productId}`,
+        method: 'PUT',
+        body: { rating, comment },
+      }),
+      invalidatesTags: (result, error, { productId }) => [
+        { type: 'Review', id: productId },
+        { type: 'Product', id: productId }
+      ],
+    }),
     listProductReviews: builder.query({
-      query: (productId) => ({ url: `/reviews/product/${productId}` }),
-      providesTags: (result, error, productId) => [
+      query: ({ productId, page = 1, limit = 5 }) => ({
+        url: `/reviews/product/${productId}?page=${page}&limit=${limit}`
+      }),
+      providesTags: (result, error, { productId }) => [
         { type: 'Review', id: productId }
       ],
     }),
@@ -3713,13 +3945,44 @@ export const reviewApi = baseApi.injectEndpoints({
         { type: 'Product', id: productId }
       ],
     }),
+    // Admin endpoints
+    getAllReviews: builder.query({
+      query: ({ page = 1, limit = 10, searchTerm = '' }) => {
+        let url = `/reviews/admin?page=${page}&limit=${limit}`;
+        if (searchTerm) {
+          url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        return url;
+      },
+      providesTags: ['Review'],
+    }),
+    moderateReview: builder.mutation({
+      query: ({ id, isApproved }) => ({
+        url: `/reviews/${id}/moderate`,
+        method: 'PATCH',
+        body: { isApproved },
+      }),
+      invalidatesTags: ['Review', 'Product'],
+    }),
+    deleteReview: builder.mutation({
+      query: (id) => ({
+        url: `/reviews/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Review', 'Product'],
+    }),
   }),
 })
 
 export const {
   useAddReviewMutation,
+  useUpdateMyReviewMutation,
   useListProductReviewsQuery,
   useDeleteMyReviewMutation,
+  // Admin hooks
+  useGetAllReviewsQuery,
+  useModerateReviewMutation,
+  useDeleteReviewMutation,
 } = reviewApi
 
 --- END OF FILE: src\api\reviewApi.js ---
@@ -12870,7 +13133,7 @@ const Footer = () => {
                 {/* Copyright */}
                 <div className='text-center mt-6 pt-6 border-t border-gray-800 flex items-center justify-between'>
                     <p className='text-gray-400 text-sm'>Copyright © 2026 Dairy Drop. All rights reserved.</p>
-                    <p className='text-gray-400 text-sm'>Developed by <span className='text-gray-200'>Muhammad Umer</span></p>
+                    <p className='text-gray-400 text-sm'>Developed by <span className='text-gray-200'>Muhammad Umar</span></p>
                 </div>
             </div>
         </footer>
@@ -13049,34 +13312,75 @@ export default Hero
 
 --- START OF FILE: src\components\NavBar.jsx ---
 
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '@/features/auth/authSlice.js'
 import { selectCartItemCount } from '@/features/cart/cartSlice.js'
 import logo from "../assets/images/logo.jpg"
 import useAuth from '../hooks/useAuth'
 import { UserRound } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDebounce } from '../hooks/useDebounce.js'
 
 export default function NavBar() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const userInfo = useSelector((s) => s.auth.userInfo)
   const cartItemCount = useSelector(selectCartItemCount)
+  const [searchParams] = useSearchParams()
 
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+
+  // Initialize search input from URL params
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('q') || '';
+    setSearchInput(urlSearchQuery);
+  }, [searchParams]);
+
+  // Debounce the search input - allow search with single character, minimal delay for real-time feel
+  const debouncedSearchQuery = useDebounce(searchInput.length >= 1 ? searchInput : '', 150); // 150ms delay for near real-time
 
   const onLogout = () => {
     dispatch(logout())
     navigate('/')
   }
 
-  const handleSearch = (e) => {
+  // Handle search input change with debounced navigation
+  useEffect(() => {
+    // Only navigate if we're not already on the products page with the same search
+    const currentPath = window.location.pathname;
+    const currentSearch = searchParams.get('q') || '';
+
+    if (debouncedSearchQuery.trim() && !currentPath.includes('/products')) {
+      // Navigate to products page with search query if not already there
+      navigate(`/products?q=${encodeURIComponent(debouncedSearchQuery.trim())}`);
+    } else if (debouncedSearchQuery.trim() && currentPath.includes('/products') && currentSearch !== debouncedSearchQuery) {
+      // Update search query if already on products page but search term changed
+      navigate(`/products?q=${encodeURIComponent(debouncedSearchQuery.trim())}`);
+    } else if (!debouncedSearchQuery.trim() && currentPath.includes('/products') && currentSearch) {
+      // Clear search if on products page and search is cleared
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      navigate(`/products?${newParams.toString()}`);
+    }
+  }, [debouncedSearchQuery, navigate, searchParams]);
+
+  // Update searchInput when searchQuery from URL changes
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('q') || '';
+    setSearchInput(urlSearchQuery);
+  }, [searchParams]);
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(''); // Clear search after navigating
+    if (searchInput.trim().length >= 1) {
+      navigate(`/products?q=${encodeURIComponent(searchInput.trim())}`);
+    } else {
+      // Clear search parameter when input is empty
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      navigate(`/products?${newParams.toString()}`);
     }
   }
 
@@ -13108,11 +13412,11 @@ export default function NavBar() {
 
           {/* Search Bar */}
           <div className='hidden lg:flex items-center flex-1 max-w-sm ml-4'>
-            <form onSubmit={handleSearch} className='relative w-full'>
+            <form onSubmit={handleSearchSubmit} className='relative w-full'>
               <input
                 type='text'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder='Search products...'
                 className='w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
@@ -13187,7 +13491,8 @@ import { useListProductsQuery } from '../api/productsApi.js'
 import { useAddToCartMutation } from '../api/cartApi.js'
 import { toast } from 'sonner'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 const Products = () => {
     // Fetch top products (most recent) for the home page
@@ -13200,16 +13505,18 @@ const Products = () => {
 
     const [addToCart] = useAddToCartMutation()
     const [addingProductIds, setAddingProductIds] = useState(new Set())
-
-    const images = [
-        "https://media.istockphoto.com/id/2209167127/photo/indian-paneer-cheese-made-from-fresh-milk-and-lemon-juice-on-grey-background-copy-space.webp?a=1&b=1&s=612x612&w=0&k=20&c=PAn7GuHgdN5S4hlXW2lQcUV-OGegD5GuLyvKf-fsr4E=",
-        "https://images.unsplash.com/photo-1571212515416-fef01fc43637?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8eW9ndXJ0fGVufDB8fDB8fHww",
-        "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bWlsa3xlbnwwfHwwfHx8MA%3D%3D",
-        "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWlsY3xlbnwwfHwwfHx8MA%3D%3D",
-        "https://images.unsplash.com/photo-1573812461383-e5f8b759d12e?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2hlZXxlbnwwfHwwfHx8MA%3D%3D"
-    ]
+    const navigate = useNavigate()
+    const userInfo = useSelector((state) => state.auth.userInfo)
 
     const handleAddToCart = async (product) => {
+        // Check if user is authenticated
+        if (!userInfo?.token) {
+            // If not authenticated, redirect to register page
+            toast.info('Please create an account to add items to cart');
+            navigate('/register');
+            return;
+        }
+
         // Add product ID to the loading set
         setAddingProductIds(prev => new Set(prev).add(product._id))
 
@@ -13281,7 +13588,10 @@ const Products = () => {
                                             <div className='relative aspect-square overflow-hidden bg-gray-100'>
                                                 <Link to={`/products/${product._id}`}>
                                                     <img
-                                                        src={product.images?.[0] || images[index] || 'https://placehold.co/400x400?text=No+Image'}
+                                                        src={
+                                                            product?.images?.[0] ||
+                                                            "https://placehold.co/400x400?text=No+Image"
+                                                        }
                                                         alt={product.name}
                                                         className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                                                     />
@@ -13387,23 +13697,32 @@ export default Products
 --- START OF FILE: src\components\ProtectedRoute.jsx ---
 
 import { Navigate, Outlet } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { logout } from '../features/auth/authSlice.js'
 import useAuth from '@/hooks/useAuth.js'
 
 const ProtectedRoute = ({ allowAdmin = false, allowBoth = false, children }) => {
   const { user, isAdmin } = useAuth()
+  const dispatch = useDispatch()
 
-  if (!user) return <Navigate to="/login" replace />
+  // If route is for admins only, and user is not admin -> Go Home
+  if (allowAdmin && (!user || !isAdmin)) return <Navigate to="/" replace />
+
+  // If route is for users (not allowAdmin), but user IS admin -> Log out and redirect to login
+  if (!allowAdmin && user && isAdmin) {
+    // Dispatch logout action to clear user data
+    dispatch(logout());
+    // Redirect to login page (not admin login)
+    return <Navigate to="/login" replace />
+  }
+
+  // If route requires authentication and user is not authenticated
+  if (!allowBoth && !user) return <Navigate to="/login" replace />
 
   // If allowBoth is true, we just show the content
   if (allowBoth) return children ? children : <Outlet />
 
-  // If route is for admins only, and user is not admin -> Go Home
-  if (allowAdmin && !isAdmin) return <Navigate to="/" replace />
-
-  // If route is for users (not allowAdmin), but user IS admin -> Go to Admin Dashboard
-  if (!allowAdmin && isAdmin) return <Navigate to="/admin" replace />
-
-  // 2. Return children if they exist, otherwise use Outlet
+  // If user is authenticated and not an admin, allow access to user routes
   return children ? children : <Outlet />
 }
 
@@ -13637,6 +13956,1593 @@ export default Stats
 
 ================================================================================
 
+        └── admin/
+                ├── AdminHeader.jsx
+                ├── AdminSidebar.jsx
+                ├── ConfirmationModal.jsx
+                ├── Loader.jsx
+                ├── OrderDetailModal.jsx
+                ├── ProductForm.jsx
+                ├── StatCard.jsx
+
+--- START OF FILE: src\components\admin\AdminHeader.jsx ---
+
+import { useSelector } from "react-redux"
+import { Bell } from "lucide-react"
+
+const AdminHeader = () => {
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  return (
+    <div className="bg-white shadow-sm p-6 flex justify-between items-center">
+      <h1 className="text-2xl font-bold text-gray-800 pr-4">Hey, {userInfo?.user?.name || "Admin"}!</h1><span className="flex-1 text-sm text-blue-600">Manage Your Dairy</span>
+      <div className="flex items-center gap-6">
+        <button className="relative p-2 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300">
+          <Bell size={20} />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+            {userInfo?.user?.name?.charAt(0) || "A"}
+          </div>
+          <div className="hidden sm:block">
+            <p className="text-sm font-semibold text-gray-800">{userInfo?.user?.name || "Admin"}</p>
+            <p className="text-xs text-gray-500">{userInfo?.user?.email}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AdminHeader
+
+--- END OF FILE: src\components\admin\AdminHeader.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\AdminSidebar.jsx ---
+
+import { useNavigate } from "react-router-dom"
+import { useDispatch } from "react-redux"
+import { logout } from "../../features/auth/authSlice.js"
+import { toast } from "sonner"
+import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, LogOut, Menu } from "lucide-react"
+import { useState } from "react"
+
+const AdminSidebar = ({ currentPage, setCurrentPage }) => {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [isOpen, setIsOpen] = useState(false)
+
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "products", label: "Products", icon: Package },
+    { id: "orders", label: "Orders", icon: ShoppingCart },
+    { id: "users", label: "Users", icon: Users },
+    { id: "reviews", label: "Reviews", icon: MessageSquare },
+  ]
+
+  const handleLogout = () => {
+    dispatch(logout())
+    toast.success("Logged out successfully")
+    navigate("/admin/login")
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
+      >
+        <Menu size={24} />
+      </button>
+
+      <div
+        className={`fixed lg:relative w-1/2 md:w-1/5 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-40 ${isOpen ? "left-0" : "-left-full lg:left-0"
+          }`}
+      >
+        <div className="p-[18px] border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">Dairy Drop</h2>
+          <p className="text-gray-500 text-sm mt-1">Admin Panel - Manage | Analyze</p>
+        </div>
+
+        <nav className="p-4 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setCurrentPage(item.id)
+                  setIsOpen(false)
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition duration-200 text-sm font-medium ${currentPage === item.id
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+                  }`}
+              >
+                <Icon size={20} />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="absolute bottom-10 left-4 right-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200 text-sm font-medium"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+
+        <p className="absolute bottom-2 left-4 right-4 text-center text-xs text-gray-500 font-medium">&copy; 2026 Dairy Drop | Muhamamd Umar</p>
+      </div>
+
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30" onClick={() => setIsOpen(false)} />
+      )}
+    </>
+  )
+}
+
+export default AdminSidebar
+
+--- END OF FILE: src\components\admin\AdminSidebar.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\ConfirmationModal.jsx ---
+
+import { X } from "lucide-react";
+
+const ConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title = "Confirm Action", 
+  message = "Are you sure you want to proceed?", 
+  confirmText = "Confirm", 
+  cancelText = "Cancel",
+  isLoading = false
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+            disabled={isLoading}
+          >
+            <X size={24} />
+          </button>
+        </div>
+        
+        <p className="text-gray-600 mb-6">{message}</p>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition disabled:opacity-50"
+          >
+            {isLoading ? 'Processing...' : confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConfirmationModal;
+
+--- END OF FILE: src\components\admin\ConfirmationModal.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\Loader.jsx ---
+
+export default function Loader({ text }) {
+    return (
+        <div className="flex items-center justify-center mt-20">
+            <div className="text-center">
+                {/* Animated spinner */}
+                <div className="relative w-20 h-20 mx-auto mb-8">
+                    <div className="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-2 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }}></div>
+                </div>
+
+                {/* Loading text with pulse animation */}
+                <div className="space-y-3">
+                    <h2 className="text-2xl font-semibold text-slate-800">
+                        {text || 'Loading...'}
+                    </h2>
+                    <div className="flex items-center justify-center gap-1">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <p className="text-slate-500 text-sm">Please wait while we prepare your data</p>
+                </div>
+
+                {/* Optional: Progress bar */}
+                <div className="mt-8 w-64 mx-auto">
+                    <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+--- END OF FILE: src\components\admin\Loader.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\OrderDetailModal.jsx ---
+
+import { useState } from "react"
+import { toast } from "sonner"
+import { X } from "lucide-react"
+import ConfirmationModal from "./ConfirmationModal.jsx"
+import { useUpdateOrderStatusMutation } from "../../api/adminApi.js"
+
+const OrderDetailModal = ({ order, onClose, refetch }) => {
+  const [status, setStatus] = useState(order.status)
+  const [showStatusModal, setShowStatusModal] = useState(false)
+
+  const [updateOrderStatus, { isLoading }] = useUpdateOrderStatusMutation()
+
+  const handleStatusUpdate = async () => {
+    try {
+      // Map frontend status to backend status
+      let backendStatus = status;
+      if (status === 'processing') {
+        backendStatus = 'Confirmed'; // Backend uses 'Confirmed' for processing
+      } else {
+        // Capitalize first letter for other statuses
+        backendStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      }
+
+      await updateOrderStatus({ id: order._id, status: backendStatus }).unwrap()
+      toast.success("Order status updated successfully")
+      if (refetch) refetch()
+      onClose()
+    } catch (error) {
+      toast.error("Failed to update order status")
+      console.error("Error:", error)
+    }
+  }
+
+  const handleStatusClick = () => {
+    setShowStatusModal(true)
+  }
+
+  const getStatusColor = (s) => {
+    // Map frontend status to backend status for color matching
+    const backendStatus = s === 'processing' ? 'Confirmed' : s.charAt(0).toUpperCase() + s.slice(1);
+    const colors = {
+      Pending: "bg-yellow-100 text-yellow-800",
+      Confirmed: "bg-blue-100 text-blue-800", // Backend uses "Confirmed" for what frontend calls "Processing"
+      Shipped: "bg-purple-100 text-purple-800",
+      Delivered: "bg-green-100 text-green-800",
+      Cancelled: "bg-red-100 text-red-800",
+    }
+    return colors[backendStatus] || "bg-gray-100 text-gray-800"
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">Order Details</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={isLoading}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Order ID</p>
+              <p className="font-mono font-bold">{order._id}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Date</p>
+              <p className="font-bold">{new Date(order.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-600 mb-2">Customer</p>
+            <p className="font-bold">{order.userId?.name}</p>
+            <p className="text-gray-600">{order.userId?.email}</p>
+            <p className="text-gray-600">{order.userId?.phone}</p>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-gray-800 mb-3">Items</h4>
+            <div className="space-y-2 bg-gray-50 p-3 rounded">
+              {order.items?.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span>
+                    {item.name} x {item.quantity}
+                  </span>
+                  <span className="font-bold">${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-indigo-50 p-4 rounded-lg">
+            <div className="flex justify-between mb-2">
+              <span>Subtotal:</span>
+              <span>${(order.totalAmount - (order.tax || 0)).toFixed(2)}</span>
+            </div>
+            {order.tax && (
+              <div className="flex justify-between mb-2">
+                <span>Tax:</span>
+                <span>${order.tax.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-bold border-t-2 border-indigo-200 pt-2">
+              <span>Total:</span>
+              <span>${order.totalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              disabled={isLoading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+            >
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+            >
+              Close
+            </button>
+            <button
+              onClick={handleStatusClick}
+              disabled={isLoading || status === order.status}
+              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition disabled:opacity-50"
+            >
+              {isLoading ? "Updating..." : "Update Status"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmationModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onConfirm={handleStatusUpdate}
+        title="Update Order Status"
+        message={`Are you sure you want to update the status to ${status}? This action cannot be undone.`}
+        confirmText="Update"
+        cancelText="Cancel"
+        isLoading={isLoading}
+      />
+    </div>
+  )
+}
+
+export default OrderDetailModal
+
+--- END OF FILE: src\components\admin\OrderDetailModal.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\ProductForm.jsx ---
+
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import { X, Loader2, Upload } from "lucide-react"
+import { useCreateProductMutation, useUpdateProductMutation } from "../../api/adminApi.js"
+
+const ProductForm = ({ product, onClose }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: "milk",
+    inStock: "",
+    isActive: true,
+  })
+
+  const [images, setImages] = useState([])
+  const [previewImages, setPreviewImages] = useState([])
+  const [createProduct, { isLoading: isCreating }] = useCreateProductMutation()
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation()
+
+  const loading = isCreating || isUpdating
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        inStock: product.inStock || product.stock,
+        isActive: product.isActive !== undefined ? product.isActive : true,
+      })
+
+      // Set existing images if available
+      if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+        setPreviewImages(product.images)
+      } else if (product.image) {
+        setPreviewImages([product.image])
+      }
+    } else {
+      // Reset form for new product
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        category: "milk",
+        inStock: "",
+        isActive: true,
+      })
+      setImages([])
+      setPreviewImages([])
+    }
+  }, [product])
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files)
+    setImages(files)
+
+    // Create preview URLs for the selected files
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file))
+    setPreviewImages(newPreviewUrls)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      // Create form data for file upload
+      const formPayload = new FormData()
+      formPayload.append('name', formData.name)
+      formPayload.append('description', formData.description)
+      // Append as strings since backend will parse them
+      formPayload.append('price', formData.price)
+      formPayload.append('category', formData.category)
+      formPayload.append('inStock', formData.inStock)
+      formPayload.append('isActive', formData.isActive || true)
+
+      // Append images if any
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          formPayload.append('images', images[i])
+        }
+      }
+
+      if (product) {
+        // Update existing product - pass the form data in a nested object
+        await updateProduct({ id: product._id, _formData: formPayload }).unwrap()
+        toast.success("Product updated successfully")
+      } else {
+        // Create new product
+        await createProduct(formPayload).unwrap()
+        toast.success("Product created successfully")
+      }
+      onClose()
+    } catch (error) {
+      console.error("Error details:", error)
+      toast.error(error?.data?.message || "Failed to save product")
+    }
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  return (
+    <div className="fixed h-screen inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 mb-8">
+      <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">{product ? "Edit Product" : "Add New Product"}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700" disabled={loading}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter product name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              name="description"
+              placeholder="Enter product description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <input
+                type="number"
+                name="price"
+                placeholder="$99.99"
+                value={formData.price}
+                onChange={handleChange}
+                step="0.01"
+                required
+                disabled={loading}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <input
+                type="number"
+                name="inStock"
+                placeholder="100"
+                value={formData.inStock}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
+            >
+              <option value="milk">Milk</option>
+              <option value="yogurt">Yogurt</option>
+              <option value="cheese">Cheese</option>
+              <option value="butter">Butter</option>
+              <option value="ghee">Ghee</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Product Images</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                id="images"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                disabled={loading}
+                className="hidden"
+              />
+              <label htmlFor="images" className="cursor-pointer">
+                <div className="flex flex-col items-center justify-center">
+                  <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                  <p className="text-gray-600">Click to upload images</p>
+                  <p className="text-sm text-gray-500">Supports multiple files (JPG, PNG, WEBP, AVIF)</p>
+                </div>
+              </label>
+            </div>
+
+            {/* Image previews */}
+            {previewImages.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {previewImages.map((img, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={img}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border"
+                    />
+                    {index === 0 && (
+                      <span className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        Main
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Saving...
+                </>
+              ) : product ? (
+                "Update Product"
+              ) : (
+                "Create Product"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+export default ProductForm
+
+--- END OF FILE: src\components\admin\ProductForm.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\StatCard.jsx ---
+
+const StatCard = ({ icon: Icon, title, value, color }) => {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-600",
+    green: "bg-green-50 text-green-600",
+    purple: "bg-purple-50 text-purple-600",
+    orange: "bg-orange-50 text-orange-600",
+  }
+
+  return (
+    <div className="bg-white shadow-sm border border-gray-300 p-6 transition-all duration-200">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-14 h-14 rounded-xl ${colorClasses[color] || colorClasses.blue} flex items-center justify-center flex-shrink-0`}>
+          <Icon size={24} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default StatCard
+
+--- END OF FILE: src\components\admin\StatCard.jsx ---
+
+================================================================================
+
+            └── pages/
+                    ├── DashboardHome.jsx
+                    ├── OrdersPage.jsx
+                    ├── ProductsPage.jsx
+                    ├── ReviewsPage.jsx
+                    ├── UsersPage.jsx
+
+--- START OF FILE: src\components\admin\pages\DashboardHome.jsx ---
+
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import StatCard from "../StatCard.jsx"
+import { ShoppingCart, Package, Users, TrendingUp } from "lucide-react"
+import Loader from "../Loader.jsx"
+import { useGetOrdersQuery, useGetProductsQuery, useGetUsersQuery } from "../../../api/adminApi.js"
+
+const DashboardHome = () => {
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+  })
+
+  const { data: orders, isLoading: ordersLoading, isError: ordersError } = useGetOrdersQuery()
+  const { data: products, isLoading: productsLoading, isError: productsError } = useGetProductsQuery()
+  const { data: users, isLoading: usersLoading, isError: usersError } = useGetUsersQuery()
+
+  useEffect(() => {
+    // Calculate stats when data is available
+    const ordersData = orders?.orders || []
+    const productsData = products?.items || []
+    const usersData = users?.users || []
+
+    const totalRevenue = Array.isArray(ordersData) ? ordersData.reduce((sum, order) => sum + order.totalAmount, 0) : 0
+
+    setStats({
+      totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
+      totalProducts: Array.isArray(productsData) ? productsData.length : 0,
+      totalUsers: Array.isArray(usersData) ? usersData.length : 0,
+      totalRevenue,
+    })
+  }, [orders, products, users])
+
+  // If any data is loading, show loading state
+  if (ordersLoading || productsLoading || usersLoading) {
+    return <Loader text={"Loading Dashboard"}/>
+  }
+
+  // If any request failed, show error
+  if (ordersError || productsError || usersError) {
+    return <div className="text-center py-10 text-red-500">Failed to load dashboard statistics</div>
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-8">Dashboard Overview</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard icon={ShoppingCart} title="Total Orders" value={orders?.orders?.length || 0} color="blue" />
+        <StatCard icon={Package} title="Total Products" value={products?.items?.length || 0} color="green" />
+        <StatCard icon={Users} title="Total Users" value={users?.users?.length || 0} color="purple" />
+        <StatCard icon={TrendingUp} title="Total Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} color="orange" />
+      </div>
+
+      <div className="bg-white border border-gray-300 shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-5">
+          Quick Stats
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Average Order Value
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-blue-600">
+              ${(stats.totalOrders > 0
+                ? stats.totalRevenue / stats.totalOrders
+                : 0
+              ).toFixed(2)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-green-100 bg-green-50/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Active Products
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-green-600">
+              {Array.isArray(products?.items) ? products.items.filter((p) => p.inStock > 0).length || 0 : 0}
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  )
+}
+
+export default DashboardHome
+
+--- END OF FILE: src\components\admin\pages\DashboardHome.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\pages\OrdersPage.jsx ---
+
+import { useState } from "react"
+import { toast } from "sonner"
+import { Eye } from "lucide-react"
+import OrderDetailModal from "../OrderDetailModal.jsx"
+import Loader from "../Loader.jsx"
+import { useGetOrdersQuery } from "../../../api/adminApi.js"
+
+const OrdersPage = () => {
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [statusFilter, setStatusFilter] = useState("all")
+
+  const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery()
+
+  const getStatusColor = (status) => {
+    // Convert status to capitalized format for color mapping
+    const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    const colors = {
+      Pending: "bg-yellow-100 text-yellow-800",
+      Confirmed: "bg-blue-100 text-blue-800", // Backend uses "Confirmed" for what frontend calls "Processing"
+      Shipped: "bg-purple-100 text-purple-800",
+      Delivered: "bg-green-100 text-green-800",
+      Cancelled: "bg-red-100 text-red-800",
+    }
+    return colors[capitalizedStatus] || "bg-gray-100 text-gray-800"
+  }
+
+  const ordersList = Array.isArray(orders?.orders) ? orders.orders : []
+
+  // Filter orders based on status, handling both frontend and backend status formats
+  const filteredOrders = statusFilter === "all"
+    ? ordersList
+    : ordersList.filter((order) => {
+        // Convert both to lowercase for comparison to handle different formats
+        const orderStatusLower = order.status.toLowerCase();
+        const filterStatusLower = statusFilter.toLowerCase();
+
+        // Map frontend "processing" to backend "confirmed"
+        if (filterStatusLower === "processing") {
+          return orderStatusLower === "confirmed";
+        }
+        return orderStatusLower === filterStatusLower;
+      })
+
+  if (isLoading) {
+    return <Loader text={"Loading Orders"} />
+  }
+
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Failed to load orders</div>
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-8">Orders</h2>
+
+      <div className="mb-6 flex gap-2">
+        {["all", "pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            className={`px-4 py-2 rounded-lg font-medium transition ${statusFilter.toLowerCase() === status.toLowerCase() ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-100 border-b">
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Order ID</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Customer</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Total</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Date</th>
+              <th className="px-6 py-3 text-center font-semibold text-gray-700">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.map((order) => (
+              <tr key={order._id} className="border-b hover:bg-gray-50 transition">
+                <td className="px-6 py-3 font-mono text-sm text-gray-600">{order._id.slice(0, 8)}...</td>
+                <td className="px-6 py-3">{order?.address?.name || "Unknown"}</td>
+                <td className="px-6 py-3 font-bold text-gray-800">${order.totalAmount?.toFixed(2)}</td>
+                <td className="px-6 py-3">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td className="px-6 py-3 text-center">
+                  <button
+                    onClick={() => setSelectedOrder(order)}
+                    className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    <Eye size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredOrders.length === 0 && (
+        <div className="text-center py-10 bg-white rounded-lg">
+          <p className="text-gray-500">No orders found</p>
+        </div>
+      )}
+
+      {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} refetch={refetch} />}
+    </div>
+  )
+}
+
+export default OrdersPage
+
+--- END OF FILE: src\components\admin\pages\OrdersPage.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\pages\ProductsPage.jsx ---
+
+import { useState } from "react"
+import { toast } from "sonner"
+import { Plus, Edit2, Trash2 } from "lucide-react"
+import ProductForm from "../ProductForm.jsx"
+import Loader from "../Loader.jsx"
+import ConfirmationModal from "../ConfirmationModal.jsx"
+import { useGetProductsQuery, useDeleteProductMutation } from "../../../api/adminApi.js"
+
+const ProductsPage = () => {
+  const [showForm, setShowForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [productToDelete, setProductToDelete] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const { data: products, isLoading, isError, refetch } = useGetProductsQuery()
+  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation()
+
+  const handleDelete = async () => {
+    if (!productToDelete) return
+
+    try {
+      await deleteProduct(productToDelete).unwrap()
+      toast.success("Product deleted successfully")
+      setProductToDelete(null)
+      setShowDeleteModal(false)
+    } catch (error) {
+      toast.error("Failed to delete product")
+      console.error("Delete error:", error)
+      setShowDeleteModal(false)
+    }
+  }
+
+  const handleFormClose = () => {
+    setShowForm(false)
+    setEditingProduct(null)
+  }
+
+  if (isLoading) {
+    return <Loader text={"Loading Products"} />
+  }
+
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Failed to load products</div>
+  }
+
+  const productsList = Array.isArray(products?.items) ? products.items : []
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl font-bold text-gray-800">Products</h2>
+
+        <button
+          onClick={() => {
+            setEditingProduct(null)
+            setShowForm(true)
+          }}
+          className="inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg transition-all duration-300"
+        >
+          <Plus size={18} />
+          Add Product
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <ProductForm product={editingProduct} onClose={handleFormClose} />
+        </div>
+      )}
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        {productsList.map((product) => (
+          <div
+            key={product._id}
+            className="group bg-white border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+          >
+            {product.image && (
+              <div className="h-48 overflow-hidden">
+                <img
+                  src={product.image || "/placeholder.svg"}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            )}
+
+            <div className="p-5 space-y-3">
+              <div>
+                <h3 className="font-bold text-lg text-gray-800">
+                  {product.name}
+                </h3>
+                <p className="text-sm text-gray-600 line-clamp-2">
+                  {product.description?.substring(0, 50)}...
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-indigo-600 font-bold">
+                  ${product.price}
+                </span>
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {product.category}
+                </span>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setEditingProduct(product)
+                    setShowForm(true)
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-2 rounded-lg transition"
+                >
+                  <Edit2 size={15} />
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => {
+                    setProductToDelete(product._id)
+                    setShowDeleteModal(true)
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 px-3 py-2 rounded-lg transition disabled:opacity-50"
+                >
+                  <Trash2 size={15} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {productsList.length === 0 && (
+        <div className="text-center py-14 bg-white rounded-lg border border-gray-200">
+          <p className="text-gray-500">No products found</p>
+        </div>
+      )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
+    </div>
+  )
+}
+
+export default ProductsPage
+
+
+--- END OF FILE: src\components\admin\pages\ProductsPage.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\pages\ReviewsPage.jsx ---
+
+import React, { useState } from 'react';
+import { useGetAllReviewsQuery, useModerateReviewMutation, useDeleteReviewMutation } from '../../../api/reviewApi';
+import { toast } from 'sonner';
+import { Star, MessageCircle, User, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import Loader from '../Loader';
+
+const ReviewsPage = () => {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const { data: reviewsData, isLoading, isError, refetch } = useGetAllReviewsQuery({ page, limit, searchTerm });
+  const [moderateReview] = useModerateReviewMutation();
+  const [deleteReview] = useDeleteReviewMutation();
+
+  const reviews = reviewsData?.reviews || [];
+  const totalReviews = reviewsData?.total || 0;
+  const totalPages = Math.ceil(totalReviews / limit);
+
+  const handleModerateReview = async (reviewId, isApproved) => {
+    try {
+      await moderateReview({ id: reviewId, isApproved }).unwrap();
+      toast.success(`Review ${isApproved ? 'approved' : 'rejected'} successfully`);
+      refetch();
+    } catch (error) {
+      toast.error(`Failed to ${isApproved ? 'approve' : 'reject'} review`);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId).unwrap();
+      toast.success('Review deleted successfully');
+      refetch();
+    } catch (error) {
+      toast.error('Failed to delete review');
+    }
+  };
+
+  if (isLoading) {
+      return <Loader text={"Loading Reviews"} />
+    }
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Reviews Management</h1>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          Error loading reviews. Please try again later.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Reviews Management</h1>
+        <p className="text-gray-600">Manage and moderate user reviews</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow">
+        {/* Search and Filter Bar */}
+        <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search reviews..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value={5}>5 per page</option>
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Reviews List */}
+        <div className="divide-y divide-gray-200">
+          {reviews.length === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              No reviews found
+            </div>
+          ) : (
+            reviews.map((review) => (
+              <div key={review._id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center">
+                        <User className="w-5 h-5 text-gray-500 mr-2" />
+                        <span className="font-medium text-gray-900">
+                          {review.user?.name || 'Anonymous User'}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                        <span className="ml-1 font-medium text-gray-900">{review.rating}</span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        review.isApproved 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {review.isApproved ? 'Approved' : 'Pending'}
+                      </span>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <p className="text-gray-700">{review.comment}</p>
+                    </div>
+                    
+                    <div className="text-sm text-gray-500">
+                      <p>Product: {review.product?.name || 'Unknown Product'}</p>
+                      <p>Created: {new Date(review.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 ml-4">
+                    {!review.isApproved && (
+                      <button
+                        onClick={() => handleModerateReview(review._id, true)}
+                        className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Approve
+                      </button>
+                    )}
+                    {review.isApproved && (
+                      <button
+                        onClick={() => handleModerateReview(review._id, false)}
+                        className="flex items-center gap-1 px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Reject
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteReview(review._id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalReviews > 0 && (
+          <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalReviews)} of {totalReviews} reviews
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className={`px-3 py-1 rounded ${page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded">
+                {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                className={`px-3 py-1 rounded ${page === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ReviewsPage;
+
+--- END OF FILE: src\components\admin\pages\ReviewsPage.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\admin\pages\UsersPage.jsx ---
+
+import { useState } from "react"
+import { toast } from "sonner"
+import { Trash2, Shield, UserCheck, UserX } from "lucide-react"
+import Loader from "../Loader.jsx"
+import ConfirmationModal from "../ConfirmationModal.jsx"
+import { useGetUsersQuery, useUpdateUserRoleMutation, useDeleteUserMutation, useUpdateUserStatusMutation } from "../../../api/adminApi.js"
+
+const UsersPage = () => {
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [showRoleModal, setShowRoleModal] = useState(false)
+  const [newRole, setNewRole] = useState("user")
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [userToToggleStatus, setUserToToggleStatus] = useState(null)
+  const [showStatusModal, setShowStatusModal] = useState(false)
+
+  const { data: users, isLoading, isError, refetch } = useGetUsersQuery()
+  const [updateUserRole, { isLoading: isUpdatingRole }] = useUpdateUserRoleMutation()
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation()
+  const [updateUserStatus, { isLoading: isUpdatingStatus }] = useUpdateUserStatusMutation()
+
+  const handleUpdateRole = async () => {
+    try {
+      await updateUserRole({ id: selectedUser._id, role: newRole }).unwrap()
+      setShowRoleModal(false)
+      setSelectedUser(null)
+      toast.success("User role updated successfully")
+      refetch()
+    } catch (error) {
+      toast.error("Failed to update user role")
+      console.error("Update error:", error)
+    }
+  }
+
+  const handleUpdateUserStatus = async () => {
+    if (!userToToggleStatus) return
+
+    try {
+      await updateUserStatus({ id: userToToggleStatus._id, isActive: !userToToggleStatus.isActive }).unwrap()
+      setShowStatusModal(false)
+      setUserToToggleStatus(null)
+      toast.success(`User account ${userToToggleStatus.isActive ? 'deactivated' : 'activated'} successfully`)
+      refetch()
+    } catch (error) {
+      const errorMessage = error?.data?.message || `Failed to ${userToToggleStatus.isActive ? 'deactivate' : 'activate'} user`
+      toast.error(errorMessage)
+      console.error("Status update error:", error)
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+
+    try {
+      await deleteUser(userToDelete).unwrap()
+      toast.success("User deleted successfully")
+      setUserToDelete(null)
+      setShowDeleteModal(false)
+      refetch()
+    } catch (error) {
+      toast.error("Failed to delete user")
+      console.error("Delete error:", error)
+      setShowDeleteModal(false)
+    }
+  }
+
+  if (isLoading) {
+    return <Loader text={"Loading Users"} />
+  }
+
+  if (isError) {
+    return <div className="text-center py-10 text-red-500">Failed to load users</div>
+  }
+
+  const usersList = Array.isArray(users?.users) ? users.users : []
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-8">Users Management</h2>
+
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-100 border-b">
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Name</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Email</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Phone</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Role</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
+              <th className="px-6 py-3 text-left font-semibold text-gray-700">Joined</th>
+              <th className="px-6 py-3 text-center font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {usersList.map((user) => (
+              <tr key={user._id} className="border-b hover:bg-gray-50 transition">
+                <td className="px-6 py-3 font-medium text-gray-800">{user.name}</td>
+                <td className="px-6 py-3 text-gray-600">{user.email}</td>
+                <td className="px-6 py-3 text-gray-600">{user.phone || "N/A"}</td>
+                <td className="px-6 py-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${user.role === "admin" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+                      }`}
+                  >
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-6 py-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                  >
+                    {user.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-sm text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td className="px-6 py-3 text-center">
+                  <div className="flex justify-center gap-2">
+                    {user.role !== 'admin' ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setNewRole(user.role)
+                            setShowRoleModal(true)
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Change role"
+                        >
+                          <Shield size={18} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserToToggleStatus(user)
+                            setShowStatusModal(true)
+                          }}
+                          className={user.isActive ? "text-red-600 hover:text-red-800" : "text-green-600 hover:text-green-800"}
+                          title={user.isActive ? "Deactivate user" : "Activate user"}
+                        >
+                          {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserToDelete(user._id)
+                            setShowDeleteModal(true)
+                          }}
+                          disabled={isDeleting}
+                          className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                          title="Delete user"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Restricted</span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {usersList.length === 0 && (
+        <div className="text-center py-10 bg-white rounded-lg">
+          <p className="text-gray-500">No users found</p>
+        </div>
+      )}
+
+      {showRoleModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Update User Role</h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-3">
+                User: <strong>{selectedUser.name}</strong>
+              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">New Role</label>
+              <select
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value)}
+                disabled={isUpdatingRole}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRoleModal(false)
+                  setSelectedUser(null)
+                }}
+                disabled={isUpdatingRole}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateRole}
+                disabled={isUpdatingRole}
+                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg transition disabled:opacity-50"
+              >
+                {isUpdatingRole ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStatusModal && userToToggleStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              {userToToggleStatus.isActive ? 'Deactivate User' : 'Activate User'}
+            </h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-3">
+                User: <strong>{userToToggleStatus.name}</strong>
+              </p>
+              <p className="text-sm text-gray-600">
+                {userToToggleStatus.isActive
+                  ? 'Are you sure you want to deactivate this user? They will not be able to log in.'
+                  : 'Are you sure you want to activate this user? They will be able to log in again.'}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowStatusModal(false)
+                  setUserToToggleStatus(null)
+                }}
+                disabled={isUpdatingStatus}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUserStatus}
+                disabled={isUpdatingStatus}
+                className={`flex-1 px-4 py-2 ${userToToggleStatus.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded-lg transition disabled:opacity-50`}
+              >
+                {isUpdatingStatus ? 'Processing...' : (userToToggleStatus.isActive ? 'Deactivate' : 'Activate')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
+    </div>
+  )
+}
+
+export default UsersPage
+
+--- END OF FILE: src\components\admin\pages\UsersPage.jsx ---
+
+================================================================================
+
         └── Cart/
                 ├── CartItem.jsx
                 ├── CartSummary.jsx
@@ -13663,8 +15569,8 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveFromCart }) => {
     onRemoveFromCart(item.product);
   };
 
-  // Use product image if available, otherwise use cart item image or placeholder
-  const image = product?.image || item.image || 'https://placehold.co/100x100';
+  // Use cart item image first, then product image if available, otherwise use placeholder
+  const image = item.image || product?.image || 'https://placehold.co/100x100';
   // Use product stock if available
   const inStock = product?.inStock ?? item.inStock ?? 999; // Default to high number if not available
 
@@ -13855,19 +15761,28 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 --- START OF FILE: src\components\Products\ProductCard.jsx ---
 
 import { Star, StarIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
-const images = [
-    "https://images.unsplash.com/photo-1571212515416-fef01fc43637?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8eW9ndXJ0fGVufDB8fDB8fHww",
-    "https://media.istockphoto.com/id/2209167127/photo/indian-paneer-cheese-made-from-fresh-milk-and-lemon-juice-on-grey-background-copy-space.webp?a=1&b=1&s=612x612&w=0&k=20&c=PAn7GuHgdN5S4hlXW2lQcUV-OGegD5GuLyvKf-fsr4E=",
-    "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWlsY3xlbnwwfHwwfHx8MA%3D%3D",
-    "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bWlsa3xlbnwwfHwwfHx8MA%3D%3D",
-    "https://images.unsplash.com/photo-1573812461383-e5f8b759d12e?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2hlZXxlbnwwfHwwfHx8MA%3D%3D"
-]
-
-export const ProductCard = ({ product, index, onAddToCart }) => {
+export const ProductCard = ({ product, index, onAddToCart, isAdding = false }) => {
     const productId = product._id || product.id;
+    const navigate = useNavigate();
+    const userInfo = useSelector((state) => state.auth.userInfo);
     console.log("productId:", productId);
+
+    const handleAddToCart = (product) => {
+        // Check if user is authenticated
+        if (!userInfo?.token) {
+            // If not authenticated, redirect to register page
+            toast.info('Please create an account to add items to cart');
+            navigate('/register');
+            return;
+        }
+
+        // If authenticated, call the original onAddToCart function
+        onAddToCart(product);
+    };
 
     return (
         <div className='flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group'>
@@ -13877,7 +15792,11 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
                 {/* Image */}
                 <div className='relative aspect-square overflow-hidden bg-gray-100'>
                     <img
-                        src={product.image || images[index % images.length]}
+                        src={
+                            product?.images?.[0] ||
+                            product?.image ||
+                            "https://placehold.co/400x400?text=No+Image"
+                        }
                         alt={product.name}
                         className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                     />
@@ -13928,18 +15847,18 @@ export const ProductCard = ({ product, index, onAddToCart }) => {
                     onClick={(e) => {
                         e.preventDefault(); // Safety
                         e.stopPropagation();
-                        onAddToCart(product);
+                        handleAddToCart(product);
                     }}
-                    disabled={product.inStock === 0}
+                    disabled={product.inStock === 0 || isAdding}
                     className={`w-full px-4 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${product.inStock > 0
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
                         <path d='M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' />
                     </svg>
-                    {product.inStock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    {isAdding ? 'Adding...' : (product.inStock > 0 ? 'Add to Cart' : 'Out of Stock')}
                 </button>
             </div>
         </div>
@@ -14090,22 +16009,23 @@ export const Sidebar = ({ filters, setFilters, onClearAll, onCategoryChange }) =
                     {[4, 3, 2, 1].map((rating) => (
                         <label key={rating} className='flex items-center cursor-pointer group'>
                             <input
-                                type='checkbox'
+                                type='radio'
+                                name='rating'
                                 checked={filters.ratings.includes(rating)}
                                 onChange={(e) => {
                                     if (e.target.checked) {
                                         setFilters(prev => ({
                                             ...prev,
-                                            ratings: [...prev.ratings, rating]
+                                            ratings: [rating] // Only one rating filter at a time
                                         }));
                                     } else {
                                         setFilters(prev => ({
                                             ...prev,
-                                            ratings: prev.ratings.filter(r => r !== rating)
+                                            ratings: [] // Clear ratings when unselected
                                         }));
                                     }
                                 }}
-                                className='w-4 h-4 text-blue-600 rounded cursor-pointer'
+                                className='w-4 h-4 text-blue-600 rounded-full cursor-pointer'
                             />
                             <div className='ml-3 flex items-center'>
                                 <span className='text-yellow-500 mr-1'>★</span>
@@ -14113,6 +16033,24 @@ export const Sidebar = ({ filters, setFilters, onClearAll, onCategoryChange }) =
                             </div>
                         </label>
                     ))}
+                    {/* Add option to clear rating filter */}
+                    <label className='flex items-center cursor-pointer group'>
+                        <input
+                            type='radio'
+                            name='rating'
+                            checked={filters.ratings.length === 0}
+                            onChange={() => {
+                                setFilters(prev => ({
+                                    ...prev,
+                                    ratings: []
+                                }));
+                            }}
+                            className='w-4 h-4 text-blue-600 rounded-full cursor-pointer'
+                        />
+                        <div className='ml-3 flex items-center'>
+                            <span className='text-gray-700 group-hover:text-gray-900'>All Ratings</span>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -14416,12 +16354,12 @@ import { useGetMyOrdersQuery } from '../../api/orderApi.js'
 import { Loader2 } from 'lucide-react'
 
 const statusStyles = {
-    delivered: 'bg-green-100 text-green-700',
-    shipped: 'bg-blue-100 text-blue-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-    processing: 'bg-yellow-100 text-yellow-700',
-    cancelled: 'bg-red-100 text-red-700',
+    Delivered: 'bg-green-100 text-green-700',
+    Shipped: 'bg-blue-100 text-blue-700',
+    Confirmed: 'bg-blue-100 text-blue-700',
+    Pending: 'bg-yellow-100 text-yellow-700',
+    Processing: 'bg-yellow-100 text-yellow-700',
+    Cancelled: 'bg-red-100 text-red-700',
 }
 
 export const Orders = () => {
@@ -14853,6 +16791,7 @@ export default cartSlice.reducer
 
     └── hooks/
             ├── useAuth.js
+            ├── useDebounce.js
             ├── useProducts.js
             ├── useSyncCartWithStore.js
 
@@ -14894,6 +16833,33 @@ export default useAuth
 
 
 --- END OF FILE: src\hooks\useAuth.js ---
+
+================================================================================
+
+
+--- START OF FILE: src\hooks\useDebounce.js ---
+
+import { useState, useEffect } from 'react';
+
+export function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    // Update debounced value after delay
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cancel the timeout if value changes (before the delay time ends)
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+--- END OF FILE: src\hooks\useDebounce.js ---
 
 ================================================================================
 
@@ -16002,7 +17968,7 @@ export default Home
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useLoginMutation } from '@/api/authApi.js'
 import { setCredentials } from '@/features/auth/authSlice.js'
 import loginImage from '../assets/images/logo.jpg'
@@ -16015,14 +17981,31 @@ export default function Login() {
   const [login, { isLoading }] = useLoginMutation()
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // If user is already logged in, redirect to appropriate page
+  if (userInfo && userInfo.user) {
+    if (userInfo.user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/");
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       const res = await login({ emailOrPhone, password }).unwrap()
       dispatch(setCredentials({ token: res.token, user: res.user }))
-      toast.success("Login Success")
-      navigate('/')
+
+      // Redirect based on user role after successful login
+      if (res.user.role === "admin") {
+        toast.success("Admin login successful!")
+        navigate("/admin/dashboard")
+      } else {
+        toast.success("Login successful!")
+        navigate("/")
+      }
     } catch (err) {
       toast.error(err?.data?.message || 'Login failed')
     }
@@ -16250,37 +18233,37 @@ const Orders = () => {
     const orders = data?.orders || [];
 
     const statusConfig = {
-        delivered: {
+        Delivered: {
             label: 'Delivered',
             color: 'bg-green-100 text-green-700 border-green-200',
             icon: CheckCircle,
             iconColor: 'text-green-600'
         },
-        shipped: {
+        Shipped: {
             label: 'Shipped',
             color: 'bg-blue-100 text-blue-700 border-blue-200',
             icon: Truck,
             iconColor: 'text-blue-600'
         },
-        confirmed: {
+        Confirmed: {
             label: 'Confirmed',
             color: 'bg-blue-100 text-blue-700 border-blue-200',
             icon: CheckCircle,
             iconColor: 'text-blue-600'
         },
-        pending: {
+        Pending: {
             label: 'Pending',
             color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             icon: Clock,
             iconColor: 'text-yellow-600'
         },
-        processing: {
+        Processing: {
             label: 'Processing',
             color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             icon: Clock,
             iconColor: 'text-yellow-600'
         },
-        cancelled: {
+        Cancelled: {
             label: 'Cancelled',
             color: 'bg-red-100 text-red-700 border-red-200',
             icon: XCircle,
@@ -16290,9 +18273,9 @@ const Orders = () => {
 
     const tabs = [
         { id: 'all', label: 'All Orders', count: orders.length },
-        { id: 'delivered', label: 'Delivered', count: orders.filter(o => o.status === 'delivered').length },
-        { id: 'shipped', label: 'Shipped', count: orders.filter(o => o.status === 'shipped').length },
-        { id: 'processing', label: 'Processing', count: orders.filter(o => o.status === 'processing').length },
+        { id: 'Delivered', label: 'Delivered', count: orders.filter(o => o.status === 'Delivered').length },
+        { id: 'Shipped', label: 'Shipped', count: orders.filter(o => o.status === 'Shipped').length },
+        { id: 'Processing', label: 'Processing', count: orders.filter(o => o.status === 'Processing').length },
         { id: 'Pending', label: 'Pending', count: orders.filter(o => o.status === 'Pending').length },
         { id: 'Cancelled', label: 'Cancelled', count: orders.filter(o => o.status === 'Cancelled').length }
     ];
@@ -16563,10 +18546,10 @@ export default Orders;
 
 import React, { useState } from 'react';
 import { Star, ShoppingCart, Heart, Truck, Shield, RotateCcw, Check, ChevronLeft, ChevronRight, ChevronRight as ArrowRight, Loader2 } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useGetProductQuery } from '../api/productsApi.js';
 import { useAddToCartMutation } from '../api/cartApi.js';
-import { useListProductReviewsQuery, useAddReviewMutation } from '../api/reviewApi.js';
+import { useListProductReviewsQuery, useAddReviewMutation, useUpdateMyReviewMutation, useDeleteMyReviewMutation } from '../api/reviewApi.js';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
@@ -16578,6 +18561,11 @@ const ProductDetails = () => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [reviewComment, setReviewComment] = useState('');
+    const [editingReviewId, setEditingReviewId] = useState(null);
+    const [editingReviewData, setEditingReviewData] = useState({ rating: 0, comment: '' });
+    const [reviewToDelete, setReviewToDelete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const reviewsPerPage = 5;
 
     const userInfo = useSelector((state) => state.auth.userInfo);
 
@@ -16585,16 +18573,23 @@ const ProductDetails = () => {
     const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
 
     // Fetch real-time reviews from the database
-    const { data: reviewsData, isLoading: reviewsLoading, isError: reviewsError } = useListProductReviewsQuery(productId);
+    const { data: reviewsData, isLoading: reviewsLoading, isError: reviewsError } = useListProductReviewsQuery({
+        productId,
+        page: currentPage,
+        limit: reviewsPerPage
+    });
     const [addReview, { isLoading: isAddingReview }] = useAddReviewMutation();
+    const [updateMyReview, { isLoading: isUpdatingReview }] = useUpdateMyReviewMutation();
+    const [deleteMyReview, { isLoading: isDeletingReview }] = useDeleteMyReviewMutation();
 
     const product = data?.product || {};
     const reviews = reviewsData?.reviews || [];
+    const pagination = reviewsData?.pagination || {};
 
     const fallbackImages = [
         'https://images.unsplash.com/photo-1635586506547-4dbe01d7ba5d?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
         'https://images.unsplash.com/photo-1633179963862-72c64dc6d30d?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
-        'https://plus.unsplash.com/premium_photo-1664298144031-9097970e5bd3?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
+        'https://plus.unsplash.com/premium_photo-1664298144031-9097970e5bd3?w=900&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
         'https://images.unsplash.com/photo-1630409346699-79481a79db52?w=1000&auto=format&fit=crop&q=100&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGRhaXJ5JTIwcHJvZHVjdHN8ZW58MHx8MHx8fDA%3D',
     ];
 
@@ -16622,13 +18617,25 @@ const ProductDetails = () => {
         }
 
         try {
-            await addReview({
-                productId: product._id,
-                rating: rating,
-                comment: reviewComment
-            }).unwrap();
+            if (editingReviewId) {
+                // Update existing review
+                await updateMyReview({
+                    productId: product._id,
+                    rating: rating,
+                    comment: reviewComment
+                }).unwrap();
+                toast.success('Review updated successfully!');
+                setEditingReviewId(null); // Exit edit mode
+            } else {
+                // Add new review
+                await addReview({
+                    productId: product._id,
+                    rating: rating,
+                    comment: reviewComment
+                }).unwrap();
+                toast.success('Review submitted successfully!');
+            }
 
-            toast.success('Review submitted successfully!');
             setRating(0);
             setReviewComment('');
 
@@ -16640,7 +18647,23 @@ const ProductDetails = () => {
         }
     };
 
+    const handleCancelEdit = () => {
+        setEditingReviewId(null);
+        setRating(0);
+        setReviewComment('');
+    };
+
+    const navigate = useNavigate();
+
     const handleAddToCart = async () => {
+        // Check if user is authenticated
+        if (!userInfo?.token) {
+            // If not authenticated, redirect to register page
+            toast.info('Please create an account to add items to cart');
+            navigate('/register');
+            return;
+        }
+
         try {
             await addToCart({
                 productId: product._id,
@@ -16690,7 +18713,7 @@ const ProductDetails = () => {
                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
                     <span className="hover:text-blue-600">Home</span>
                     <ChevronRight className="w-4 h-4" />
-                    <span className="hover:text-blue-600">{product.category}</span>
+                    <span className="hover:text-blue-600 capitalize">{product.category}</span>
                     <ChevronRight className="w-4 h-4" />
                     <span className="text-gray-900">{product.name}</span>
                     <ChevronRight className="w-4 h-4" />
@@ -16738,7 +18761,7 @@ const ProductDetails = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                             {/* Category */}
                             <div className="mb-3">
-                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full capitalize">
                                     {product.category}
                                 </span>
                             </div>
@@ -16952,6 +18975,34 @@ const ProductDetails = () => {
                                             <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
                                                 Verified Purchase
                                             </span>
+                                            {userInfo?.token && review.user && (
+                                                <div className="flex gap-2 ml-auto">
+                                                    {((review.user._id === userInfo._id || review.user.id === userInfo._id || review.user._id === userInfo.id) && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingReviewId(review._id);
+                                                                    setEditingReviewData({ rating: review.rating, comment: review.comment });
+                                                                    setRating(review.rating);
+                                                                    setReviewComment(review.comment);
+                                                                }}
+                                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-100 px-4 py-1 transition-all duration-300"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setReviewToDelete(review._id);
+                                                                }}
+                                                                disabled={isDeletingReview}
+                                                                className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-100 px-4 py-1 transition-all duration-300 disabled:opacity-50"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3 mb-2">
                                             <div className="flex items-center">
@@ -16982,10 +19033,41 @@ const ProductDetails = () => {
                         )}
                     </div>
 
+                    {/* Pagination Controls */}
+                    {pagination?.totalPages > 1 && (
+                        <div className="flex items-center justify-between mb-8">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                Previous
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-600">
+                                    Page {currentPage} of {pagination.totalPages}
+                                </span>
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
+                                disabled={currentPage === pagination.totalPages}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+
                     {/* Write Review Form - Only show if user is logged in */}
                     {userInfo?.token ? (
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-6">Write a Review</h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-6">
+                                {editingReviewId ? 'Edit Your Review' : 'Write a Review'}
+                            </h3>
                             <form onSubmit={handleSubmitReview} className="space-y-5">
                                 {/* Rating Selection */}
                                 <div>
@@ -17024,21 +19106,33 @@ const ProductDetails = () => {
                                     ></textarea>
                                 </div>
 
-                                {/* Submit Button */}
-                                <button
-                                    type="submit"
-                                    disabled={isAddingReview}
-                                    className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isAddingReview ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Submitting...
-                                        </>
-                                    ) : (
-                                        'Submit Review'
+                                {/* Submit and Cancel Buttons */}
+                                <div className="flex gap-3">
+                                    <button
+                                        type="submit"
+                                        disabled={isAddingReview || isUpdatingReview}
+                                        className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {(isAddingReview || isUpdatingReview) ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                {editingReviewId ? 'Updating...' : 'Submitting...'}
+                                            </>
+                                        ) : (
+                                            editingReviewId ? 'Update Review' : 'Submit Review'
+                                        )}
+                                    </button>
+
+                                    {editingReviewId && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            className="px-8 py-3 bg-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-400 transition"
+                                        >
+                                            Cancel
+                                        </button>
                                     )}
-                                </button>
+                                </div>
                             </form>
                         </div>
                     ) : (
@@ -17047,6 +19141,43 @@ const ProductDetails = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Delete Confirmation Modal */}
+                {reviewToDelete && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Deletion</h3>
+                            <p className="text-gray-600 mb-6">Are you sure you want to delete this review? This action cannot be undone.</p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setReviewToDelete(null)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                                    disabled={isDeletingReview}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await deleteMyReview(product._id).unwrap();
+                                            toast.success('Review deleted successfully!');
+                                            setReviewToDelete(null);
+                                            refetch();
+                                        } catch (error) {
+                                            console.error('Error deleting review:', error);
+                                            toast.error('Failed to delete review');
+                                            setReviewToDelete(null);
+                                        }
+                                    }}
+                                    disabled={isDeletingReview}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                                >
+                                    {isDeletingReview ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -17066,9 +19197,10 @@ import { useAddToCartMutation } from '../api/cartApi.js'
 import { Sidebar } from '../components/Products/Sidebar'
 import { ProductCard } from '../components/Products/ProductCard'
 import { Pagination } from '../components/Products/Pagination'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useDebounce } from '../hooks/useDebounce.js'
 
 const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -17086,6 +19218,15 @@ const Products = () => {
     const [sortBy, setSortBy] = useState('-createdAt')
     const [currentPage, setCurrentPage] = useState(1)
     const [limit] = useState(12)
+    const [addingProductIds, setAddingProductIds] = useState(new Set())
+
+    // State for search input to enable real-time updates
+    const [searchInput, setSearchInput] = useState('')
+
+    useEffect(() => {
+        // Only sync when URL changes externally (navbar)
+        setSearchInput(searchQuery)
+    }, [searchQuery])
 
     // Initialize filters from URL parameters on component mount
     useEffect(() => {
@@ -17097,8 +19238,11 @@ const Products = () => {
         }
     }, [categoryFromUrl])
 
-    // Convert our filters to API query parameters
-    const queryParams = {
+    // Debounce the search input - allow search with single character, minimal delay for real-time feel
+    const debouncedSearchQuery = useDebounce(searchInput.length >= 1 ? searchInput : '', 150);
+
+    // Convert our filters to API query parameters - memoize to prevent unnecessary refetches
+    const queryParams = useMemo(() => ({
         page: currentPage,
         limit: limit,
         sort: sortBy,
@@ -17106,9 +19250,9 @@ const Products = () => {
         minPrice: filters.priceRange.min || undefined,
         maxPrice: filters.priceRange.max || undefined,
         inStock: filters.inStockOnly ? 1 : undefined,
-        ratings: filters.ratings.length > 0 ? filters.ratings.join(',') : undefined,
-        q: searchQuery || undefined, // Add search parameter (backend expects 'q'),
-    }
+        averageRating: filters.ratings.length > 0 ? filters.ratings[0] : undefined, // Filter by minimum average rating
+        q: debouncedSearchQuery || undefined, // Use debounced search query (backend expects 'q'),
+    }), [currentPage, limit, sortBy, filters, debouncedSearchQuery])
 
     const { data, isLoading, isError, error, refetch } = useListProductsQuery(queryParams)
 
@@ -17124,6 +19268,7 @@ const Products = () => {
             ratings: [],
             inStockOnly: false
         })
+        setSearchInput('') // Clear search input
         // Clear search and category parameters from URL
         setSearchParams(prev => {
             const newParams = new URLSearchParams(prev)
@@ -17133,9 +19278,12 @@ const Products = () => {
         })
     }
 
-    const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation()
+    const [addToCart] = useAddToCartMutation()
 
     const handleAddToCart = async (product) => {
+        // Add product ID to the loading set
+        setAddingProductIds(prev => new Set(prev).add(product._id))
+
         try {
             await addToCart({
                 productId: product._id,
@@ -17147,6 +19295,13 @@ const Products = () => {
         } catch (error) {
             console.error('Error adding to cart:', error)
             toast.error('Failed to add item to cart')
+        } finally {
+            // Remove product ID from the loading set
+            setAddingProductIds(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(product._id)
+                return newSet
+            })
         }
     }
 
@@ -17158,17 +19313,9 @@ const Products = () => {
 
     // Handle search input change
     const handleSearchChange = (e) => {
-        const value = e.target.value
-        if (value.trim()) {
-            setSearchParams({ q: value.trim() })
-        } else {
-            setSearchParams(prev => {
-                const newParams = new URLSearchParams(prev)
-                newParams.delete('q')
-                return newParams
-            })
-        }
+        setSearchInput(e.target.value)
     }
+
 
     // Handle category change from sidebar
     const handleCategoryChange = (selectedCategories) => {
@@ -17202,6 +19349,35 @@ const Products = () => {
         }
     }, [searchQuery])
 
+    // Handle filter changes - trigger refetch when filters change
+    useEffect(() => {
+        // Reset to first page when filters change
+        setCurrentPage(1)
+    }, [filters])
+
+    // Refetch data when filters change
+    useEffect(() => {
+        refetch();
+    }, [queryParams, refetch])
+
+    useEffect(() => {
+        if (debouncedSearchQuery) {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev)
+                params.set('q', debouncedSearchQuery)
+                return params
+            })
+        } else {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev)
+                params.delete('q')
+                return params
+            })
+        }
+
+        setCurrentPage(1)
+    }, [debouncedSearchQuery])
+
     return (
         <div className='bg-gray-50 min-h-screen py-8'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -17209,12 +19385,12 @@ const Products = () => {
                 {/* Header */}
                 <div className='mb-8'>
                     <h1 className='text-4xl font-bold text-gray-900 mb-2'>
-                        {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+                        {debouncedSearchQuery ? `Search Results for "${debouncedSearchQuery}"` : 'All Products'}
                     </h1>
                     <p className='text-gray-600'>
                         {isLoading ? 'Loading products...' :
-                         products.length > 0 ? `Showing ${products.length} of ${totalProducts} products` :
-                         searchQuery ? `No products found for "${searchQuery}"` : `Showing ${products.length} of ${totalProducts} products`}
+                            products.length > 0 ? `Showing ${products.length} of ${totalProducts} products` :
+                                debouncedSearchQuery ? `No products found for "${debouncedSearchQuery}"` : `Showing ${products.length} of ${totalProducts} products`}
                     </p>
                 </div>
 
@@ -17236,16 +19412,17 @@ const Products = () => {
                             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                                 {/* Search Input */}
                                 <div className='relative flex-1 max-w-md'>
-                                    <input
+                                    {/* <input
                                         type='text'
-                                        value={searchQuery}
+                                        value={searchInput}
                                         onChange={handleSearchChange}
                                         placeholder='Search products...'
                                         className='w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                                     />
                                     <svg className='absolute left-3 top-2.5 w-5 h-5 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
-                                    </svg>
+                                    </svg> */}
+                                    <p className='text-xl font-medium pl-2'>Dairy Drop - Products</p>
                                 </div>
 
                                 {/* Sort Dropdown */}
@@ -17289,14 +19466,18 @@ const Products = () => {
                                 {products.length > 0 ? (
                                     <>
                                         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                                            {products.map((product, index) => (
-                                                <ProductCard
-                                                    key={product._id}
-                                                    product={product}
-                                                    index={index}
-                                                    onAddToCart={handleAddToCart}
-                                                />
-                                            ))}
+                                            {products.map((product, index) => {
+                                                const isAdding = addingProductIds.has(product._id);
+                                                return (
+                                                    <ProductCard
+                                                        key={product._id}
+                                                        product={product}
+                                                        index={index}
+                                                        onAddToCart={handleAddToCart}
+                                                        isAdding={isAdding}
+                                                    />
+                                                )
+                                            })}
                                         </div>
 
                                         {/* Pagination */}
@@ -17312,10 +19493,10 @@ const Products = () => {
                                     <div className='flex flex-col items-center justify-center py-20'>
                                         <div className='text-center'>
                                             <h3 className='text-2xl font-bold text-gray-900 mb-2'>
-                                                {searchQuery ? `No products found for "${searchQuery}"` : 'No products found'}
+                                                {debouncedSearchQuery ? `No products found for "${debouncedSearchQuery}"` : 'No products found'}
                                             </h3>
                                             <p className='text-gray-600 mb-6'>
-                                                {searchQuery
+                                                {debouncedSearchQuery
                                                     ? 'We couldn\'t find any products matching your search. Try different keywords.'
                                                     : 'We couldn\'t find any products matching your search criteria.'}
                                             </p>
@@ -17328,18 +19509,17 @@ const Products = () => {
                                                         ratings: [],
                                                         inStockOnly: false
                                                     });
+                                                    setSearchInput('')
                                                     setSortBy('-createdAt');
                                                     setCurrentPage(1);
                                                     // Clear search parameter
-                                                    setSearchParams(prev => {
-                                                        const newParams = new URLSearchParams(prev)
-                                                        newParams.delete('search')
-                                                        return newParams
-                                                    })
+                                                    const newParams = new URLSearchParams(searchParams);
+                                                    newParams.delete('q');
+                                                    setSearchParams(newParams);
                                                 }}
                                                 className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
                                             >
-                                                {searchQuery ? 'Clear Search' : 'Clear all filters'}
+                                                {debouncedSearchQuery ? 'Clear Search' : 'Clear all filters'}
                                             </button>
                                         </div>
                                     </div>
@@ -17424,7 +19604,7 @@ export default Profile
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useRegisterMutation } from '@/api/authApi.js'
 import { setCredentials } from '@/features/auth/authSlice.js'
 import registerImage from '../assets/images/logo.jpg'
@@ -17444,6 +19624,16 @@ export default function Register() {
   const [register, { isLoading }] = useRegisterMutation()
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // If user is already logged in, redirect to appropriate page
+  if (userInfo && userInfo.user) {
+    if (userInfo.user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/");
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -17475,8 +19665,15 @@ export default function Register() {
       }).unwrap()
 
       dispatch(setCredentials({ token: res.token, user: res.user }))
-      toast.success("Registration Successfull")
-      navigate('/')
+
+      // Redirect based on user role after successful registration
+      if (res.user.role === "admin") {
+        toast.success("Admin registration successful!")
+        navigate("/admin/dashboard")
+      } else {
+        toast.success("Registration successful!")
+        navigate("/")
+      }
     } catch (e) {
       toast.error(e?.data?.message || 'Registration failed')
     }
@@ -17748,6 +19945,212 @@ export default function Register() {
 
 ================================================================================
 
+        └── admin/
+                ├── AdminDashboard.jsx
+                ├── AdminLogin.jsx
+
+--- START OF FILE: src\pages\admin\AdminDashboard.jsx ---
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
+import { toast } from "sonner"
+import AdminSidebar from "../../components/admin/AdminSidebar.jsx"
+import AdminHeader from "../../components/admin/AdminHeader.jsx"
+import DashboardHome from "../../components/admin/pages/DashboardHome.jsx"
+import ProductsPage from "../../components/admin/pages/ProductsPage.jsx"
+import OrdersPage from "../../components/admin/pages/OrdersPage.jsx"
+import UsersPage from "../../components/admin/pages/UsersPage.jsx"
+import ReviewsPage from "../../components/admin/pages/ReviewsPage.jsx"
+
+const AdminDashboard = () => {
+  const [currentPage, setCurrentPage] = useState("dashboard")
+  const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // Check if user is an admin, if not redirect to home
+  useEffect(() => {
+    if (userInfo && userInfo.user && userInfo.user.role !== "admin") {
+      toast.error("Access denied: Admin access required")
+      navigate("/")
+    }
+  }, [userInfo, navigate])
+
+  // If user is not an admin, don't render the dashboard
+  if (userInfo && userInfo.user && userInfo.user.role !== "admin") {
+    return null
+  }
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case "dashboard":
+        return <DashboardHome />
+      case "products":
+        return <ProductsPage />
+      case "orders":
+        return <OrdersPage />
+      case "users":
+        return <UsersPage />
+      case "reviews":
+        return <ReviewsPage />
+      default:
+        return <DashboardHome />
+    }
+  }
+
+  return (
+    <div className="flex h-screen bg-[#FAFAFA]">
+      <AdminSidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      <div className="flex flex-col flex-1">
+        <AdminHeader />
+        <main className="flex-1 overflow-auto p-8">{renderPage()}</main>
+      </div>
+    </div>
+  )
+}
+
+export default AdminDashboard
+
+--- END OF FILE: src\pages\admin\AdminDashboard.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\pages\admin\AdminLogin.jsx ---
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import { setCredentials } from "../../features/auth/authSlice.js"
+import { toast } from "sonner"
+import { Mail, Lock, Loader2 } from "lucide-react"
+
+const AdminLogin = () => {
+  const [emailOrPhone, setEmailOrPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const userInfo = useSelector((state) => state.auth.userInfo)
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (userInfo && userInfo.user) {
+      if (userInfo.user.role === "admin") {
+        // If already logged in as admin, redirect to dashboard
+        navigate("/admin/dashboard");
+      } else if (userInfo.user.role === "user") {
+        // If logged in as regular user, show error and redirect to home
+        toast.error("Access denied: Regular users cannot access admin panel");
+        navigate("/");
+      }
+    }
+  }, [userInfo, navigate]);
+
+  // If user is already logged in as admin, don't render the component
+  if (userInfo && userInfo.user && userInfo.user.role === "admin") {
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailOrPhone, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.message || "Login failed")
+        return
+      }
+
+      if (data.user.role !== "admin") {
+        toast.error("Unauthorized: Admin access required")
+        return
+      }
+
+      dispatch(setCredentials(data))
+      toast.success("Admin login successful!")
+      navigate("/admin/dashboard")
+    } catch (error) {
+      toast.error("Login failed. Please try again.")
+      console.error("Login error:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-500 to-gray-950 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Admin Panel</h1>
+          <p className="text-gray-600 mt-2">Dairy Drop Management System</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email or Phone</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={emailOrPhone}
+                onChange={(e) => setEmailOrPhone(e.target.value)}
+                placeholder="Enter your email or phone"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+export default AdminLogin
+
+--- END OF FILE: src\pages\admin\AdminLogin.jsx ---
+
+================================================================================
+
     └── shared/
         └── utils/
                 ├── handleMutation.js
@@ -17781,16 +20184,18 @@ export async function handleMutation(mutationFn, args, successMessage) {
 import { configureStore } from '@reduxjs/toolkit'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { baseApi } from '../api/baseApi.js'
+import { adminApi } from '../api/adminApi.js'
 import authReducer from '../features/auth/authSlice.js'
 import cartReducer from '../features/cart/cartSlice.js'
 
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
+    [adminApi.reducerPath]: adminApi.reducer,
     auth: authReducer,
     cart: cartReducer,
   },
-  middleware: (getDefault) => getDefault().concat(baseApi.middleware),
+  middleware: (getDefault) => getDefault().concat(baseApi.middleware, adminApi.middleware),
 })
 
 setupListeners(store.dispatch)
