@@ -6,11 +6,13 @@ FILE CONTENTS:
 
     ├── .env
     ├── README.md
+    ├── VERCEL_README.md
     ├── code-to-txt.py
     ├── combined_project_code.txt
     ├── package-lock.json
     ├── package.json
     ├── txt-to-code.py
+    ├── vercel.json
 
 --- START OF FILE: .env ---
 
@@ -22,7 +24,7 @@ JWT_EXPIRES_IN=1d
 ADMIN_EMAIL=adminemail@gmail.com
 ADMIN_PASSWORD=admin@dairydrop
 ADMIN_PHONE=03333333333
-CORS_ORIGIN=*
+CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:5175,https://dairy-drop-ecru.vercel.app
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=200
 CLOUDINARY_CLOUD_NAME=dozwtxbw8
@@ -126,6 +128,48 @@ Admin bootstrap: set `ADMIN_EMAIL` in `.env` to auto-promote a matching account 
 
 
 --- END OF FILE: README.md ---
+
+================================================================================
+
+
+--- START OF FILE: VERCEL_README.md ---
+
+# Dairy Drop Backend - Vercel Deployment
+
+## Environment Variables Required for Vercel Deployment
+
+Make sure to set these environment variables in your Vercel project settings:
+
+- `NODE_ENV`: Set to `production`
+- `MONGO_URI`: Your MongoDB connection string
+- `JWT_SECRET`: A strong secret for JWT tokens (must NOT be 'change-me' in production)
+- `JWT_EXPIRES_IN`: Token expiration time (e.g., '1d')
+- `ADMIN_EMAIL`: Admin user email
+- `CORS_ORIGIN`: Allowed origins (comma-separated if multiple)
+- `RATE_LIMIT_WINDOW_MS`: Rate limiting window in milliseconds
+- `RATE_LIMIT_MAX`: Max requests per window
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: For image uploads (if needed)
+
+## Critical: JWT_SECRET Configuration
+
+⚠️ **IMPORTANT**: The application will crash with a "FUNCTION_INVOCATION_FAILED" error if `JWT_SECRET` is still set to 'change-me' in production.
+
+Before deploying to Vercel, make sure to:
+1. Go to your Vercel dashboard
+2. Navigate to your project settings
+3. Go to "Environment Variables"
+4. Add a new environment variable:
+   - Key: `JWT_SECRET`
+   - Value: A strong, random secret string (e.g., use a password generator)
+
+## Important Notes
+
+1. The application will refuse to start in production if `JWT_SECRET` is still set to 'change-me'
+2. Make sure your MongoDB connection string is accessible from Vercel's servers
+3. The API routes are available under `/api/*` path
+4. The root path `/` is also handled by the same serverless function
+
+--- END OF FILE: VERCEL_README.md ---
 
 ================================================================================
 
@@ -259,11 +303,13 @@ FILE CONTENTS:
 
     ├── .env
     ├── README.md
+    ├── VERCEL_README.md
     ├── code-to-txt.py
     ├── combined_project_code.txt
     ├── package-lock.json
     ├── package.json
     ├── txt-to-code.py
+    ├── vercel.json
 
 --- START OF FILE: .env ---
 
@@ -275,7 +321,7 @@ JWT_EXPIRES_IN=1d
 ADMIN_EMAIL=adminemail@gmail.com
 ADMIN_PASSWORD=admin@dairydrop
 ADMIN_PHONE=03333333333
-CORS_ORIGIN=*
+CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:5175,https://dairy-drop-ecru.vercel.app
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=200
 CLOUDINARY_CLOUD_NAME=dozwtxbw8
@@ -379,6 +425,48 @@ Admin bootstrap: set `ADMIN_EMAIL` in `.env` to auto-promote a matching account 
 
 
 --- END OF FILE: README.md ---
+
+================================================================================
+
+
+--- START OF FILE: VERCEL_README.md ---
+
+# Dairy Drop Backend - Vercel Deployment
+
+## Environment Variables Required for Vercel Deployment
+
+Make sure to set these environment variables in your Vercel project settings:
+
+- `NODE_ENV`: Set to `production`
+- `MONGO_URI`: Your MongoDB connection string
+- `JWT_SECRET`: A strong secret for JWT tokens (must NOT be 'change-me' in production)
+- `JWT_EXPIRES_IN`: Token expiration time (e.g., '1d')
+- `ADMIN_EMAIL`: Admin user email
+- `CORS_ORIGIN`: Allowed origins (comma-separated if multiple)
+- `RATE_LIMIT_WINDOW_MS`: Rate limiting window in milliseconds
+- `RATE_LIMIT_MAX`: Max requests per window
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: For image uploads (if needed)
+
+## Critical: JWT_SECRET Configuration
+
+⚠️ **IMPORTANT**: The application will crash with a "FUNCTION_INVOCATION_FAILED" error if `JWT_SECRET` is still set to 'change-me' in production.
+
+Before deploying to Vercel, make sure to:
+1. Go to your Vercel dashboard
+2. Navigate to your project settings
+3. Go to "Environment Variables"
+4. Add a new environment variable:
+   - Key: `JWT_SECRET`
+   - Value: A strong, random secret string (e.g., use a password generator)
+
+## Important Notes
+
+1. The application will refuse to start in production if `JWT_SECRET` is still set to 'change-me'
+2. Make sure your MongoDB connection string is accessible from Vercel's servers
+3. The API routes are available under `/api/*` path
+4. The root path `/` is also handled by the same serverless function
+
+--- END OF FILE: VERCEL_README.md ---
 
 ================================================================================
 
@@ -2551,6 +2639,7 @@ if __name__ == "__main__":
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "vercel-start": "node src/server.js",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {
@@ -2678,6 +2767,347 @@ if __name__ == "__main__":
     main()
 
 --- END OF FILE: txt-to-code.py ---
+
+================================================================================
+
+
+--- START OF FILE: vercel.json ---
+
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
+  ]
+}
+
+--- END OF FILE: vercel.json ---
+
+================================================================================
+
+└── api/
+        ├── health.js
+        ├── index.js
+
+--- START OF FILE: api\health.js ---
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import hpp from 'hpp';
+import rateLimit from 'express-rate-limit';
+import { connectToDatabase } from '../../src/db/connection.js';
+import { env } from '../../src/config/env.js';
+import router from '../../src/routes/index.js';
+import { notFound } from '../../src/middlewares/not-found.middleware.js';
+import { errorHandler } from '../../src/middlewares/error.middleware.js';
+import mongoose from 'mongoose';
+
+// Store the app instance to avoid recreating it on every invocation (for performance in serverless environment)
+let cached = {
+  app: null,
+  dbConnected: false
+};
+
+async function initApp() {
+  // Check if JWT_SECRET is secure in production
+  if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'change-me') {
+    console.warn('Warning: insecure JWT_SECRET in production. Please update your environment variables.');
+  }
+
+  // Connect to database if not already connected
+  if (!cached.dbConnected) {
+    try {
+      await connectToDatabase();
+      cached.dbConnected = true;
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      throw error;
+    }
+  }
+
+  // Create the Express app if not already created
+  if (!cached.app) {
+    const app = express();
+
+    // Apply all middleware directly
+    app.disable('x-powered-by');
+    app.use(helmet());
+
+    // CORS: allow configured origin(s)
+    const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
+    app.use(cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
+        return cb(new Error('CORS not allowed'), false);
+      },
+      credentials: true,
+    }));
+
+    app.use(express.json({ limit: '1mb' }));
+    app.use(express.urlencoded({ extended: true }));
+    app.use(hpp());
+    app.use(compression());
+
+    const logFormat = env.NODE_ENV === 'production' ? 'combined' : 'dev';
+    app.use(morgan(logFormat));
+
+    // Basic rate limiter
+    const limiter = rateLimit({
+      windowMs: env.RATE_LIMIT_WINDOW_MS,
+      max: env.RATE_LIMIT_MAX,
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+    app.use(limiter);
+
+    // Add the root route
+    app.get('/', (_req, res) => {
+      res.json({ name: 'Dairy Drop API', status: 'ok' });
+    });
+
+    // Mount API with "/api" prefix
+    app.use('/api', router);
+
+    app.use(notFound);
+    app.use(errorHandler);
+
+    cached.app = app;
+  }
+
+  return cached.app;
+}
+
+export default async function handler(req, res) {
+  try {
+    // Initialize the app
+    const app = await initApp();
+
+    // Handle the request with the Express app
+    await new Promise((resolve, reject) => {
+      app(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: error.message
+    });
+  }
+}
+
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+};
+
+--- END OF FILE: api\health.js ---
+
+================================================================================
+
+
+--- START OF FILE: api\index.js ---
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import hpp from 'hpp';
+import { connectToDatabase } from '../src/db/connection.js'; // Fixed path
+import { env } from '../src/config/env.js';                 // Fixed path
+import router from '../src/routes/index.js';                // Fixed path
+import { notFound } from '../src/middlewares/not-found.middleware.js';
+import { errorHandler } from '../src/middlewares/error.middleware.js';
+import mongoose from 'mongoose';
+
+const app = express();
+
+// Standard Middleware
+app.disable('x-powered-by');
+app.use(helmet());
+
+const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || origins.includes('*') || origins.includes(origin)) return cb(null, true);
+    return cb(new Error('CORS not allowed'), false);
+  },
+  credentials: true,
+}));
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(hpp());
+app.use(compression());
+app.use(morgan('dev'));
+
+// Routes
+app.get('/', (req, res) => res.json({ name: 'Dairy Drop API', status: 'ok' }));
+app.use('/api', router);
+
+// Error Handling
+app.use(notFound);
+app.use(errorHandler);
+
+// Serverless Handler
+export default async function handler(req, res) {
+  try {
+    // 1. Ensure DB is connected
+    if (mongoose.connection.readyState !== 1) {
+      await connectToDatabase();
+    }
+
+    // 2. Handle the request
+    return app(req, res);
+  } catch (error) {
+    console.error('Vercel Function Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  }
+}
+
+--- END OF FILE: api\index.js ---
+
+================================================================================
+
+    └── auth/
+            ├── [...auth].js
+
+--- START OF FILE: api\auth\[...auth].js ---
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import hpp from 'hpp';
+import rateLimit from 'express-rate-limit';
+import { connectToDatabase } from '../../../src/db/connection.js';
+import { env } from '../../../src/config/env.js';
+import router from '../../../src/routes/index.js';
+import { notFound } from '../../../src/middlewares/not-found.middleware.js';
+import { errorHandler } from '../../../src/middlewares/error.middleware.js';
+import mongoose from 'mongoose';
+
+// Store the app instance to avoid recreating it on every invocation (for performance in serverless environment)
+let cached = {
+  app: null,
+  dbConnected: false
+};
+
+async function initApp() {
+  // Check if JWT_SECRET is secure in production
+  if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'change-me') {
+    console.warn('Warning: insecure JWT_SECRET in production. Please update your environment variables.');
+  }
+
+  // Connect to database if not already connected
+  if (!cached.dbConnected) {
+    try {
+      await connectToDatabase();
+      cached.dbConnected = true;
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      throw error;
+    }
+  }
+
+  // Create the Express app if not already created
+  if (!cached.app) {
+    const app = express();
+
+    // Apply all middleware directly
+    app.disable('x-powered-by');
+    app.use(helmet());
+
+    // CORS: allow configured origin(s)
+    const origins = (env.CORS_ORIGIN || '*').split(',').map((o) => o.trim());
+    app.use(cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (origins.includes('*') || origins.includes(origin)) return cb(null, true);
+        return cb(new Error('CORS not allowed'), false);
+      },
+      credentials: true,
+    }));
+
+    app.use(express.json({ limit: '1mb' }));
+    app.use(express.urlencoded({ extended: true }));
+    app.use(hpp());
+    app.use(compression());
+
+    const logFormat = env.NODE_ENV === 'production' ? 'combined' : 'dev';
+    app.use(morgan(logFormat));
+
+    // Basic rate limiter
+    const limiter = rateLimit({
+      windowMs: env.RATE_LIMIT_WINDOW_MS,
+      max: env.RATE_LIMIT_MAX,
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+    app.use(limiter);
+
+    // Add the root route
+    app.get('/', (_req, res) => {
+      res.json({ name: 'Dairy Drop API', status: 'ok' });
+    });
+
+    // Mount API with "/api" prefix
+    app.use('/api', router);
+
+    app.use(notFound);
+    app.use(errorHandler);
+
+    cached.app = app;
+  }
+
+  return cached.app;
+}
+
+export default async function handler(req, res) {
+  try {
+    // Initialize the app
+    const app = await initApp();
+
+    // Handle the request with the Express app
+    await new Promise((resolve, reject) => {
+      app(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: error.message
+    });
+  }
+}
+
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+};
+
+--- END OF FILE: api\auth\[...auth].js ---
 
 ================================================================================
 
@@ -3070,6 +3500,7 @@ export const login = asyncHandler(async (req, res) => {
   const { emailOrPhone, password } = loginSchema.parse(req.body);
   const user = await User.findOne({ $or: [{ email: emailOrPhone }, { phone: emailOrPhone }] });
   if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  if (!user.isActive) return res.status(401).json({ message: 'Account is deactivated. Access denied.' });
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
   const token = signToken({ id: String(user._id), role: user.role });
@@ -3163,13 +3594,16 @@ function sanitizeUser(user) {
 export const getCart = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
 
-  // Update inStock for each cart item based on current product data
+  // Update inStock and image for each cart item based on current product data
   if (user && user.cart && user.cart.length > 0) {
-
     for (let cartItem of user.cart) {
       const product = await Product.findById(cartItem.product);
       if (product) {
         cartItem.inStock = product.inStock;
+        // Add image if it doesn't exist in the cart item
+        if (!cartItem.image) {
+          cartItem.image = product.images?.[0] || null;
+        }
       }
     }
   }
@@ -3190,6 +3624,7 @@ export const addToCart = asyncHandler(async (req, res) => {
     product: new mongoose.Types.ObjectId(productId),
     name: product.name,
     price: product.price,
+    image: product.images?.[0] || null,  // Add image field from product
     inStock: product.inStock,  // Add inStock field
     quantity
   });
@@ -3421,14 +3856,26 @@ export const placeOrder = asyncHandler(async (req, res) => {
   let orderItems = [];
   if (fromCart || (!items || items.length === 0)) {
     if (!user.cart.length) return res.status(400).json({ message: 'Cart is empty' });
-    orderItems = user.cart.map((c) => ({ product: c.product, name: c.name, price: c.price, quantity: c.quantity }));
+    orderItems = user.cart.map((c) => ({
+      product: c.product,
+      name: c.name,
+      price: c.price,
+      quantity: c.quantity,
+      image: c.image  // Include image from cart item
+    }));
   } else {
     // items provided: fetch product snapshots
     const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } });
     orderItems = items.map((i) => {
       const p = products.find((pp) => String(pp._id) === i.productId);
       if (!p) throw Object.assign(new Error('Product not found'), { status: 404 });
-      return { product: p._id, name: p.name, price: p.price, quantity: i.quantity };
+      return {
+        product: p._id,
+        name: p.name,
+        price: p.price,
+        quantity: i.quantity,
+        image: p.images?.[0] || null  // Include image from product
+      };
     });
   }
 
@@ -3649,12 +4096,15 @@ import { Product } from '../models/product.model.js';
 import { uploadMultipleToCloudinary, deleteFromCloudinary } from '../utils/imageUpload.js';
 
 export const createProduct = asyncHandler(async (req, res) => {
-  const data = createProductSchema.parse(req.body);
+  let data = createProductSchema.parse(req.body);
 
   // Handle image uploads if files are present
   if (req.files && req.files.length > 0) {
     const uploadResults = await uploadMultipleToCloudinary(req.files);
     data.images = uploadResults.map(result => result.secure_url);
+  } else if (!data.images) {
+    // If no files uploaded and no images in body, default to empty array
+    data.images = [];
   }
 
   const product = await Product.create(data);
@@ -3664,7 +4114,9 @@ export const createProduct = asyncHandler(async (req, res) => {
 export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, minPrice, maxPrice, inStock, ratings, page = '1', limit = '12', sort = '-createdAt' } = req.query;
   const filter = { isActive: true };
-  if (q) filter.$text = { $search: q };
+  if (q) {
+    filter.name = { $regex: q, $options: 'i' };
+  }
   if (category) filter.category = category;
   if (minPrice || maxPrice) filter.price = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
   if (inStock) filter.inStock = { $gte: Number(inStock) };
@@ -3767,20 +4219,38 @@ export const listCategories = asyncHandler(async (req, res) => {
 import { asyncHandler } from '../utils/async-handler.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.schema.js';
 import { Product } from '../models/product.model.js';
+import { uploadMultipleToCloudinary, deleteFromCloudinary } from '../utils/imageUpload.js';
 
 export const createProduct = asyncHandler(async (req, res) => {
   const data = createProductSchema.parse(req.body);
+
+  // Handle image uploads if files are present
+  if (req.files && req.files.length > 0) {
+    const uploadResults = await uploadMultipleToCloudinary(req.files);
+    data.images = uploadResults.map(result => result.secure_url);
+  }
+
   const product = await Product.create(data);
   res.status(201).json({ product });
 });
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { q, category, minPrice, maxPrice, inStock, page = '1', limit = '12', sort = '-createdAt' } = req.query as any;
+  const { q, category, minPrice, maxPrice, inStock, ratings, page = '1', limit = '12', sort = '-createdAt' } = req.query as any;
   const filter: any = { isActive: true };
   if (q) filter.$text = { $search: q };
   if (category) filter.category = category;
   if (minPrice || maxPrice) filter.price = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
   if (inStock) filter.inStock = { $gte: Number(inStock) };
+  if (ratings) {
+    // Convert ratings to an array and find the highest rating
+    const ratingValues = ratings.split(',').map(r => Number(r));
+    if (ratingValues.length > 0) {
+      // Filter for products with averageRating greater than or equal to the highest selected rating
+      // For example, if user selects 4 and 3 stars, show products with rating >= 3 (the minimum)
+      const minRating = Math.min(...ratingValues);
+      filter.averageRating = { $gte: minRating };
+    }
+  }
   const skip = (Number(page) - 1) * Number(limit);
   const [items, total] = await Promise.all([
     Product.find(filter).sort(String(sort)).skip(skip).limit(Number(limit)),
@@ -3797,14 +4267,61 @@ export const getProduct = asyncHandler(async (req, res) => {
 
 export const updateProduct = asyncHandler(async (req, res) => {
   const patch = updateProductSchema.parse(req.body);
-  const product = await Product.findByIdAndUpdate(req.params.id, patch, { new: true });
+  const product = await Product.findById(req.params.id);
+
   if (!product) return res.status(404).json({ message: 'Product not found' });
-  res.json({ product });
+
+  // Handle image uploads if files are present
+  if (req.files && req.files.length > 0) {
+    // Delete old images from Cloudinary if they exist
+    if (product.images && product.images.length > 0) {
+      // Extract public IDs from the URLs to delete them
+      for (const imageUrl of product.images) {
+        try {
+          // Extract public ID from Cloudinary URL
+          const urlParts = imageUrl.split('/');
+          const publicIdWithExtension = urlParts[urlParts.length - 1];
+          const publicId = publicIdWithExtension.split('.')[0]; // Remove extension
+          await deleteFromCloudinary(publicId);
+        } catch (error) {
+          console.error('Error deleting old image from Cloudinary:', error);
+          // Continue even if deletion fails
+        }
+      }
+    }
+
+    // Upload new images
+    const uploadResults = await uploadMultipleToCloudinary(req.files);
+    patch.images = uploadResults.map(result => result.secure_url);
+  }
+
+  const updatedProduct = await Product.findByIdAndUpdate(req.params.id, patch, { new: true });
+  res.json({ product: updatedProduct });
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
+  const product = await Product.findById(req.params.id);
+
   if (!product) return res.status(404).json({ message: 'Product not found' });
+
+  // Delete images from Cloudinary if they exist
+  if (product.images && product.images.length > 0) {
+    // Extract public IDs from the URLs to delete them
+    for (const imageUrl of product.images) {
+      try {
+        // Extract public ID from Cloudinary URL
+        const urlParts = imageUrl.split('/');
+        const publicIdWithExtension = urlParts[urlParts.length - 1];
+        const publicId = publicIdWithExtension.split('.')[0]; // Remove extension
+        await deleteFromCloudinary(publicId);
+      } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error);
+        // Continue even if deletion fails
+      }
+    }
+  }
+
+  await Product.findByIdAndDelete(req.params.id);
   res.json({ message: 'Product deleted' });
 });
 
@@ -3822,6 +4339,7 @@ import { createReviewSchema } from '../validators/review.schema.js';
 import { Review } from '../models/review.model.js';
 import { Product } from '../models/product.model.js';
 import mongoose from 'mongoose';
+import { z } from 'zod';
 
 async function recomputeProductRating(productId) {
   const agg = await Review.aggregate([
@@ -3845,8 +4363,30 @@ export const addReview = asyncHandler(async (req, res) => {
 
 export const listProductReviews = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  const reviews = await Review.find({ product: productId, isApproved: true }).populate('user', 'name');
-  res.json({ reviews });
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const skip = (page - 1) * limit;
+
+  const reviews = await Review.find({ product: productId, isApproved: true })
+    .populate('user', 'name')
+    .sort({ createdAt: -1 }) // Sort by newest first
+    .skip(skip)
+    .limit(limit);
+
+  const totalReviews = await Review.countDocuments({ product: productId, isApproved: true });
+  const totalPages = Math.ceil(totalReviews / limit);
+
+  res.json({
+    reviews,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalReviews,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+      limit
+    }
+  });
 });
 
 export const deleteMyReview = asyncHandler(async (req, res) => {
@@ -3857,12 +4397,75 @@ export const deleteMyReview = asyncHandler(async (req, res) => {
   res.json({ message: 'Review removed' });
 });
 
+export const updateMyReview = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { rating, comment } = req.body;
+
+  // Validate rating and comment without productId
+  const updateReviewSchema = z.object({
+    rating: z.number().int().min(1).max(5),
+    comment: z.string().optional(),
+  });
+  const validatedData = updateReviewSchema.parse({ rating, comment });
+
+  const review = await Review.findOneAndUpdate(
+    { product: productId, user: req.user.id },
+    { rating: validatedData.rating, comment: validatedData.comment, updatedAt: Date.now() },
+    { new: true, runValidators: true }
+  );
+
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+
+  await recomputeProductRating(productId);
+  res.json({ review });
+});
+
 export const adminModerateReview = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isApproved } = req.body || {};
   const review = await Review.findByIdAndUpdate(id, { isApproved }, { new: true });
   if (review) await recomputeProductRating(String(review.product));
   res.json({ review });
+});
+
+export const getAllReviews = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const searchTerm = req.query.search || '';
+
+  const skip = (page - 1) * limit;
+
+  // Build query
+  let query = {};
+  if (searchTerm) {
+    query.$or = [
+      { comment: { $regex: searchTerm, $options: 'i' } },
+      { 'user.name': { $regex: searchTerm, $options: 'i' } },
+      { 'product.name': { $regex: searchTerm, $options: 'i' } },
+    ];
+  }
+
+  const reviews = await Review.find(query)
+    .populate('user', 'name email')
+    .populate('product', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Review.countDocuments(query);
+
+  res.json({ reviews, total });
+});
+
+export const adminDeleteReview = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const review = await Review.findByIdAndDelete(id);
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+
+  // Recalculate product rating after deletion
+  await recomputeProductRating(String(review.product));
+
+  res.json({ message: 'Review deleted successfully' });
 });
 
 --- END OF FILE: src\controllers\review.controller.js ---
@@ -3920,6 +4523,46 @@ export const adminModerateReview = asyncHandler(async (req, res) => {
   res.json({ review });
 });
 
+export const getAllReviews = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const searchTerm = req.query.search as string || '';
+
+  const skip = (page - 1) * limit;
+
+  // Build query
+  let query: any = {};
+  if (searchTerm) {
+    query.$or = [
+      { comment: { $regex: searchTerm, $options: 'i' } },
+      { 'user.name': { $regex: searchTerm, $options: 'i' } },
+      { 'product.name': { $regex: searchTerm, $options: 'i' } },
+    ];
+  }
+
+  const reviews = await Review.find(query)
+    .populate('user', 'name email')
+    .populate('product', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Review.countDocuments(query);
+
+  res.json({ reviews, total });
+});
+
+export const adminDeleteReview = asyncHandler(async (req, res) => {
+  const { id } = req.params as { id: string };
+  const review = await Review.findByIdAndDelete(id);
+  if (!review) return res.status(404).json({ message: 'Review not found' });
+
+  // Recalculate product rating after deletion
+  await recomputeProductRating(String(review.product));
+
+  res.json({ message: 'Review deleted successfully' });
+});
+
 
 --- END OF FILE: src\controllers\review.controller.ts ---
 
@@ -3946,6 +4589,20 @@ export const adminUpdateUserRole = asyncHandler(async (req, res) => {
   const { role } = req.body || {};
   if (!role || !['user', 'admin'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
   const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password');
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  res.json({ user });
+});
+
+export const adminUpdateUserStatus = asyncHandler(async (req, res) => {
+  const { isActive } = req.body || {};
+  if (typeof isActive !== 'boolean') return res.status(400).json({ message: 'isActive must be a boolean' });
+
+  // Prevent admin from deactivating their own account
+  if (req.params.id === req.user.id && !isActive) {
+    return res.status(400).json({ message: 'Admin cannot deactivate their own account' });
+  }
+
+  const user = await User.findByIdAndUpdate(req.params.id, { isActive }, { new: true }).select('-password');
   if (!user) return res.status(404).json({ message: 'User not found' });
   res.json({ user });
 });
@@ -4006,13 +4663,53 @@ export const adminDeleteUser = asyncHandler(async (req, res) => {
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 
-export async function connectToDatabase() {
-  mongoose.set('strictQuery', true);
-  await mongoose.connect(env.MONGO_URI);
+// Store the connection state for serverless environments
+let db = null;
 
-  mongoose.connection.on('connected', () => console.log('MongoDB connected'));
-  mongoose.connection.on('error', (err) => console.error('MongoDB error', err));
-  mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'));
+export async function connectToDatabase() {
+  // If we already have a connection, return it
+  if (db) {
+    if (db.readyState === 1) { // 1 means connected
+      return db;
+    }
+    // If connection is not active, try to connect again
+    if (db.readyState === 0 || db.readyState === 3) { // 0 = disconnected, 3 = disconnected
+      try {
+        await db.connect(env.MONGO_URI);
+        return db;
+      } catch (error) {
+        console.error('MongoDB reconnection failed:', error);
+        throw error;
+      }
+    }
+  }
+
+  // Set mongoose options for serverless environments
+  mongoose.set('strictQuery', true);
+
+  try {
+    db = await mongoose.connect(env.MONGO_URI, {
+      // Options for better serverless performance
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
+    mongoose.connection.on('connected', () => console.log('MongoDB connected'));
+    mongoose.connection.on('error', (err) => console.error('MongoDB error', err));
+    mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'));
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      process.exit(0);
+    });
+
+    return db;
+  } catch (error) {
+    console.error('MongoDB connection failed:', error);
+    throw error;
+  }
 }
 
 --- END OF FILE: src\db\connection.js ---
@@ -4051,8 +4748,9 @@ export async function connectToDatabase() {
 --- START OF FILE: src\middlewares\auth.middleware.js ---
 
 import { verifyToken } from '../utils/jwt.js';
+import { User } from '../models/user.model.js';
 
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Missing or invalid Authorization header' });
@@ -4060,6 +4758,13 @@ export function authenticate(req, res, next) {
   const token = header.slice(7);
   try {
     const payload = verifyToken(token);
+
+    // Check if user is still active
+    const user = await User.findById(payload.id).select('isActive');
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: 'Account is deactivated. Access denied.' });
+    }
+
     req.user = { id: payload.id, role: payload.role };
     next();
   } catch {
@@ -4234,6 +4939,7 @@ const OrderItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   name: { type: String, required: true },
   price: { type: Number, required: true },
+  image: { type: String }, // Add image field
   quantity: { type: Number, required: true, min: 1 },
 });
 
@@ -4502,6 +5208,7 @@ const CartItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   name: { type: String, required: true },
   price: { type: Number, required: true },
+  image: { type: String }, // Add image field
   inStock: { type: Number, default: 0 }, // Add inStock field
   quantity: { type: Number, required: true, min: 1 },
 });
@@ -4513,6 +5220,7 @@ const UserSchema = new Schema(
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isActive: { type: Boolean, default: true },
     addresses: { type: [AddressSchema], default: [] },
     cart: { type: [CartItemSchema], default: [] },
   },
@@ -4903,6 +5611,7 @@ export default router;
 
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
+import { upload } from '../utils/imageUpload.js';
 import { createProduct, listProducts, getProduct, updateProduct, deleteProduct, listCategories } from '../controllers/product.controller.js';
 
 const router = Router();
@@ -4912,8 +5621,9 @@ router.get('/', listProducts);
 router.get('/categories', listCategories);
 router.get('/:id', getProduct); // This should come after specific routes
 
-router.post('/', authenticate, authorize('admin'), createProduct);
-router.patch('/:id', authenticate, authorize('admin'), updateProduct);
+// Use Multer middleware for handling file uploads
+router.post('/', authenticate, authorize('admin'), upload.array('images', 10), createProduct);
+router.patch('/:id', authenticate, authorize('admin'), upload.array('images', 10), updateProduct);
 router.delete('/:id', authenticate, authorize('admin'), deleteProduct);
 
 export default router;
@@ -4929,14 +5639,19 @@ export default router;
 
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { addReview, listProductReviews, deleteMyReview, adminModerateReview } from '../controllers/review.controller.js';
+import { addReview, listProductReviews, deleteMyReview, updateMyReview, adminModerateReview, getAllReviews, adminDeleteReview } from '../controllers/review.controller.js';
 
 const router = Router();
 
 router.get('/product/:productId', listProductReviews);
 router.post('/', authenticate, addReview);
+router.put('/product/:productId', authenticate, updateMyReview);
 router.delete('/product/:productId', authenticate, deleteMyReview);
+
+// Admin routes
+router.get('/admin', authenticate, authorize('admin'), getAllReviews);
 router.patch('/:id/moderate', authenticate, authorize('admin'), adminModerateReview);
+router.delete('/:id', authenticate, authorize('admin'), adminDeleteReview);
 
 export default router;
 
@@ -4949,14 +5664,18 @@ export default router;
 
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { addReview, listProductReviews, deleteMyReview, adminModerateReview } from '../controllers/review.controller.js';
+import { addReview, listProductReviews, deleteMyReview, adminModerateReview, getAllReviews, adminDeleteReview } from '../controllers/review.controller.js';
 
 const router = Router();
 
 router.get('/product/:productId', listProductReviews);
 router.post('/', authenticate, addReview);
 router.delete('/product/:productId', authenticate, deleteMyReview);
+
+// Admin routes
+router.get('/admin', authenticate, authorize('admin'), getAllReviews);
 router.patch('/:id/moderate', authenticate, authorize('admin'), adminModerateReview);
+router.delete('/:id', authenticate, authorize('admin'), adminDeleteReview);
 
 export default router;
 
@@ -4971,7 +5690,7 @@ export default router;
 
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { adminListUsers, adminGetUser, adminUpdateUserRole, adminDeleteUser } from '../controllers/user.controller.js';
+import { adminListUsers, adminGetUser, adminUpdateUserRole, adminUpdateUserStatus, adminDeleteUser } from '../controllers/user.controller.js';
 
 const router = Router();
 
@@ -4979,6 +5698,7 @@ router.use(authenticate, authorize('admin'));
 router.get('/', adminListUsers);
 router.get('/:id', adminGetUser);
 router.patch('/:id/role', adminUpdateUserRole);
+router.patch('/:id/status', adminUpdateUserStatus);
 router.delete('/:id', adminDeleteUser);
 
 export default router;
@@ -5428,7 +6148,7 @@ export function asyncHandler(
 
 --- START OF FILE: src\utils\imageUpload.js ---
 
-import { v2 as cloudinary } from 'cloudinary';
+import { cloudinary } from '../config/cloudinary.js';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 
@@ -5437,7 +6157,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'dairy-drop', // Folder in Cloudinary to store images
-    allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+    allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
     transformation: [
       { width: 800, height: 600, crop: 'limit' } // Limit image size
     ]
@@ -5463,7 +6183,7 @@ export const uploadToCloudinary = async (filePath) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: 'dairy-drop',
-      allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+      allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
       transformation: [
         { width: 800, height: 600, crop: 'limit' }
       ]
@@ -5481,7 +6201,7 @@ export const uploadMultipleToCloudinary = async (files) => {
     const uploadPromises = files.map(file =>
       cloudinary.uploader.upload(file.path, {
         folder: 'dairy-drop',
-        allowed_formats: ['jpeg', 'jpg', 'png', 'webp'],
+        allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
         transformation: [
           { width: 800, height: 600, crop: 'limit' }
         ]
@@ -5717,14 +6437,68 @@ import { z } from 'zod';
 export const createProductSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
-  images: z.array(z.string().url()).optional().default([]),
-  price: z.number().min(0),
+  images: z.preprocess(
+    (val) => (Array.isArray(val) ? val : []),
+    z.array(z.string()).optional().default([])
+  ),
+  price: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return parseFloat(val);
+      if (typeof val === 'number') return val;
+      return val;
+    },
+    z.number().min(0)
+  ),
   category: z.string().optional(),
-  inStock: z.number().int().min(0),
-  isActive: z.boolean().optional(),
+  inStock: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return parseInt(val, 10);
+      if (typeof val === 'number') return val;
+      return val;
+    },
+    z.number().int().min(0)
+  ),
+  isActive: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return val === 'true';
+      return val;
+    },
+    z.boolean().optional()
+  ),
 });
 
-export const updateProductSchema = createProductSchema.partial();
+export const updateProductSchema = z.object({
+  name: z.string().min(2).optional(),
+  description: z.string().optional(),
+  images: z.preprocess(
+    (val) => (Array.isArray(val) ? val : undefined),
+    z.array(z.string()).optional()
+  ),
+  price: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return parseFloat(val);
+      if (typeof val === 'number') return val;
+      return val;
+    },
+    z.number().min(0).optional()
+  ),
+  category: z.string().optional(),
+  inStock: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return parseInt(val, 10);
+      if (typeof val === 'number') return val;
+      return val;
+    },
+    z.number().int().min(0).optional()
+  ),
+  isActive: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return val === 'true';
+      return val;
+    },
+    z.boolean().optional()
+  ),
+});
 
 --- END OF FILE: src\validators\product.schema.js ---
 
