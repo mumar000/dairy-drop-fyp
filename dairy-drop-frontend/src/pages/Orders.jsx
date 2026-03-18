@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Package, CreditCard, Truck, CheckCircle, Clock, XCircle, Eye, Download, Search, Loader2, X } from 'lucide-react';
 import { useGetMyOrdersQuery, useCancelOrderMutation } from '../api/orderApi.js';
+import { useVerifyCheckoutSessionMutation } from '../api/paymentApi.js';
 import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
 
 const Orders = () => {
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [cancelModal, setCancelModal] = useState({ isOpen: false, orderId: null });
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const { data, isLoading, isError, refetch } = useGetMyOrdersQuery();
     const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
+    const [verifyCheckoutSession] = useVerifyCheckoutSessionMutation();
 
     const orders = data?.orders || [];
 
@@ -87,6 +91,45 @@ const Orders = () => {
     const closeCancelModal = () => {
         setCancelModal({ isOpen: false, orderId: null });
     };
+
+    useEffect(() => {
+        const sessionId = searchParams.get('session_id');
+        const stripeStatus = searchParams.get('stripe');
+
+        if (stripeStatus !== 'success' || !sessionId) return;
+
+        let isMounted = true;
+
+        const syncStripeOrder = async () => {
+            try {
+                const result = await verifyCheckoutSession(sessionId).unwrap();
+                if (!isMounted) return;
+
+                if (result.paymentStatus === 'paid') {
+                    toast.success('Payment confirmed successfully');
+                } else {
+                    toast.message('Payment is still processing');
+                }
+
+                refetch();
+            } catch (error) {
+                if (!isMounted) return;
+                toast.error(error?.data?.message || 'Unable to verify Stripe payment');
+            } finally {
+                if (!isMounted) return;
+                const nextParams = new URLSearchParams(searchParams);
+                nextParams.delete('session_id');
+                nextParams.delete('stripe');
+                setSearchParams(nextParams, { replace: true });
+            }
+        };
+
+        syncStripeOrder();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [refetch, searchParams, setSearchParams, verifyCheckoutSession]);
 
     if (isLoading) {
         return (

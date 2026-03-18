@@ -9,7 +9,17 @@ export const paymentApi = baseApi.injectEndpoints({
         body: payload,
       }),
     }),
+    verifyCheckoutSession: builder.mutation({
+      query: (sessionId) => ({
+        url: `/payments/checkout-session/${sessionId}/verify`,
+        method: "GET",
+      }),
+      invalidatesTags: ["Orders", "Cart"],
+    }),
   }),
 });
 
-export const { useCreateCheckoutSessionMutation } = paymentApi;
+export const {
+  useCreateCheckoutSessionMutation,
+  useVerifyCheckoutSessionMutation,
+} = paymentApi;
