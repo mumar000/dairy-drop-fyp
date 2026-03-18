@@ -33,7 +33,8 @@ const OrderSchema = new Schema(
     paymentMethod: { type: String, enum: ['COD', 'Stripe'], default: 'COD' },
     paymentStatus: { type: String, enum: ['Unpaid', 'Paid', 'Failed'], default: 'Unpaid' },
     stripeSessionId: { type: String },
-    stripePaymentIntentId: { type: String }
+    stripePaymentIntentId: { type: String },
+    stripeCheckoutFingerprint: { type: String },
   },
   { timestamps: true }
 );
