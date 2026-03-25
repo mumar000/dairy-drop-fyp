@@ -24,20 +24,41 @@ const OrdersPage = () => {
     return colors[capitalizedStatus] || "bg-gray-100 text-gray-800"
   }
 
+  const getPaymentStatusColor = (paymentStatus) => {
+    const colors = {
+      Paid: "bg-green-100 text-green-800",
+      Unpaid: "bg-gray-100 text-gray-800",
+      Failed: "bg-red-100 text-red-800",
+      RefundRequested: "bg-amber-100 text-amber-800",
+      RefundPending: "bg-orange-100 text-orange-800",
+      Refunded: "bg-emerald-100 text-emerald-800",
+      RefundRejected: "bg-rose-100 text-rose-800",
+      RefundFailed: "bg-red-100 text-red-800",
+    }
+    return colors[paymentStatus] || "bg-gray-100 text-gray-800"
+  }
+
   const ordersList = Array.isArray(orders?.orders) ? orders.orders : []
 
   // Filter orders based on status, handling both frontend and backend status formats
   const filteredOrders = statusFilter === "all"
     ? ordersList
     : ordersList.filter((order) => {
-        // Convert both to lowercase for comparison to handle different formats
         const orderStatusLower = order.status.toLowerCase();
         const filterStatusLower = statusFilter.toLowerCase();
 
-        // Map frontend "processing" to backend "confirmed"
         if (filterStatusLower === "processing") {
           return orderStatusLower === "confirmed";
         }
+
+        if (filterStatusLower === "refundrequests") {
+          return order.paymentStatus === "RefundRequested";
+        }
+
+        if (filterStatusLower === "refunded") {
+          return order.paymentStatus === "Refunded";
+        }
+
         return orderStatusLower === filterStatusLower;
       })
 
@@ -54,7 +75,7 @@ const OrdersPage = () => {
       <h2 className="text-2xl font-bold text-gray-800 mb-8">Orders</h2>
 
       <div className="mb-6 flex gap-2">
-        {["all", "pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+        {["all", "pending", "processing", "shipped", "delivered", "refundRequests", "refunded", "cancelled"].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
@@ -85,9 +106,14 @@ const OrdersPage = () => {
                 <td className="px-6 py-3">{order?.address?.name || "Unknown"}</td>
                 <td className="px-6 py-3 font-bold text-gray-800">${order.totalAmount?.toFixed(2)}</td>
                 <td className="px-6 py-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </span>
+                  <div className="flex flex-col gap-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
+                      {order.paymentStatus}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-3 text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-3 text-center">

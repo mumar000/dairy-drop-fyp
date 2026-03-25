@@ -16,10 +16,18 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Orders", "Cart"],
     }),
+    markCheckoutSessionFailed: builder.mutation({
+      query: (sessionId) => ({
+        url: `/payments/checkout-session/${sessionId}/fail`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Orders", "Cart"],
+    }),
   }),
 });
 
 export const {
   useCreateCheckoutSessionMutation,
   useVerifyCheckoutSessionMutation,
+  useMarkCheckoutSessionFailedMutation,
 } = paymentApi;

@@ -1,26 +1,26 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Get the base URL from environment variable
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"
+const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 export const adminApi = createApi({
-  reducerPath: 'adminApi',
+  reducerPath: "adminApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${baseUrl}/api`,
     prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.userInfo?.token
+      const token = getState().auth.userInfo?.token;
       if (token) {
-        headers.set('Authorization', `Bearer ${token}`)
+        headers.set("Authorization", `Bearer ${token}`);
       }
-      return headers
+      return headers;
     },
   }),
-  tagTypes: ['Product', 'User', 'Order'],
+  tagTypes: ["Product", "User", "Order", "Notification"],
   endpoints: (builder) => ({
     // Products
     getProducts: builder.query({
-      query: () => '/products',
-      providesTags: ['Product'],
+      query: () => "/products",
+      providesTags: ["Product"],
     }),
     createProduct: builder.mutation({
       query: (productData) => {
@@ -28,29 +28,29 @@ export const adminApi = createApi({
         const isFormData = productData instanceof FormData;
 
         const req = {
-          url: '/products',
-          method: 'POST',
+          url: "/products",
+          method: "POST",
           body: productData,
         };
 
         // Don't set Content-Type for FormData as it will be set automatically
         if (!isFormData) {
-          req.headers = { 'Content-Type': 'application/json' };
+          req.headers = { "Content-Type": "application/json" };
         }
 
         return req;
       },
-      invalidatesTags: ['Product'],
+      invalidatesTags: ["Product"],
     }),
     updateProduct: builder.mutation({
       query: (arg) => {
         // Handle the case where arg is an object with id and _formData
-        if (arg && typeof arg === 'object' && arg.id) {
+        if (arg && typeof arg === "object" && arg.id) {
           if (arg._formData) {
             // This is the case where we have FormData in _formData property
             const req = {
               url: `/products/${arg.id}`,
-              method: 'PATCH',
+              method: "PATCH",
               body: arg._formData,
             };
             // Don't set Content-Type for FormData as it will be set automatically
@@ -62,83 +62,115 @@ export const adminApi = createApi({
 
             const req = {
               url: `/products/${id}`,
-              method: 'PATCH',
+              method: "PATCH",
               body: productData,
             };
 
             // Don't set Content-Type for FormData as it will be set automatically
             if (!isFormData) {
-              req.headers = { 'Content-Type': 'application/json' };
+              req.headers = { "Content-Type": "application/json" };
             }
 
             return req;
           }
         } else {
           // Handle case where arg is just FormData (shouldn't happen in our case)
-          throw new Error('Invalid arguments for updateProduct: id is required');
+          throw new Error(
+            "Invalid arguments for updateProduct: id is required",
+          );
         }
       },
-      invalidatesTags: ['Product'],
+      invalidatesTags: ["Product"],
     }),
     deleteProduct: builder.mutation({
       query: (id) => ({
         url: `/products/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Product'],
+      invalidatesTags: ["Product"],
     }),
 
     // Users
     getUsers: builder.query({
-      query: () => '/users',
-      providesTags: ['User'],
+      query: () => "/users",
+      providesTags: ["User"],
     }),
     updateUserRole: builder.mutation({
       query: ({ id, role }) => ({
         url: `/users/${id}/role`,
-        method: 'PATCH',
+        method: "PATCH",
         body: { role },
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
     deleteUser: builder.mutation({
       query: (id) => ({
         url: `/users/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
     updateUserStatus: builder.mutation({
       query: ({ id, isActive }) => ({
         url: `/users/${id}/status`,
-        method: 'PATCH',
+        method: "PATCH",
         body: { isActive },
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
 
     // Orders
     getOrders: builder.query({
-      query: () => '/orders',
-      providesTags: ['Order'],
+      query: () => "/orders",
+      providesTags: ["Order"],
     }),
     updateOrderStatus: builder.mutation({
       query: ({ id, status }) => {
         // Capitalize the status for backend compatibility
-        const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+        const capitalizedStatus =
+          status.charAt(0).toUpperCase() + status.slice(1);
         return {
           url: `/orders/${id}/status`,
-          method: 'PATCH',
+          method: "PATCH",
           body: { status: capitalizedStatus },
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         };
       },
-      invalidatesTags: ['Order'],
+      invalidatesTags: ["Order"],
+    }), 
+    approveRefundRequest: builder.mutation({
+      query: ({ id, note = "" }) => ({
+        url: `/payments/orders/${id}/refund/approve`,
+        method: "POST",
+        body: { note },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: ["Order"],
+    }),
+    rejectRefundRequest: builder.mutation({
+      query: ({ id, note = "" }) => ({
+        url: `/payments/orders/${id}/refund/reject`,
+        method: "POST",
+        body: { note },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: ["Order", "Notification"],
+    }),
+    getAdminNotifications: builder.query({
+      query: () => "/notifications/admin",
+      providesTags: ["Notification"],
+    }),
+    markAdminNotificationsRead: builder.mutation({
+      query: () => ({
+        url: "/notifications/admin/read",
+        method: "POST",
+      }),
+      invalidatesTags: ["Notification"],
     }),
   }),
-})
+});
 
 export const {
   // Product queries/mutations
@@ -156,4 +188,8 @@ export const {
   // Order queries/mutations
   useGetOrdersQuery,
   useUpdateOrderStatusMutation,
-} = adminApi
+  useApproveRefundRequestMutation,
+  useRejectRefundRequestMutation,
+  useGetAdminNotificationsQuery,
+  useMarkAdminNotificationsReadMutation,
+} = adminApi;

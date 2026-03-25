@@ -25,6 +25,14 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Orders'],
     }),
+    requestRefund: builder.mutation({
+      query: ({ orderId, reason }) => ({
+        url: `/orders/${orderId}/refund-request`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: ['Orders'],
+    }),
   }),
 })
 
@@ -33,4 +41,5 @@ export const {
   useGetMyOrdersQuery,
   useGetOrderQuery,
   useCancelOrderMutation,
+  useRequestRefundMutation,
 } = orderApi
