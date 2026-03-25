@@ -11,6 +11,7 @@ export const finalizeStripeOrder = async (order, paymentIntentId) => {
 
   order.paymentStatus = "Paid";
   order.stripePaymentIntentId = paymentIntentId;
+  order.paymentFailureReason = undefined;
   await order.save();
 
   for (const item of order.items) {
@@ -44,16 +45,45 @@ export const finalizeStripeOrder = async (order, paymentIntentId) => {
   return order;
 };
 
+const markOrderFailed = async (order, reason) => {
+  if (!order || order.paymentStatus === "Paid" || order.paymentStatus === "Refunded") {
+    return order;
+  }
+
+  order.paymentStatus = "Failed";
+  order.paymentFailureReason = reason;
+  await order.save();
+  return order;
+};
+
+const syncRefund = async (refund) => {
+  const paymentIntentId = refund.payment_intent;
+  if (!paymentIntentId) return;
+
+  const order = await Order.findOne({ stripePaymentIntentId: paymentIntentId });
+  if (!order) return;
+
+  order.stripeRefundId = refund.id;
+  order.refundReason = refund.reason || order.refundReason;
+
+  if (refund.status === "succeeded") {
+    order.paymentStatus = "Refunded";
+    order.refundedAt = new Date();
+  } else if (refund.status === "failed" || refund.status === "canceled") {
+    order.paymentStatus = "RefundFailed";
+  } else {
+    order.paymentStatus = "RefundPending";
+  }
+
+  await order.save();
+};
+
 export const handleStripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      env.STRIPE_WEBHOOK_SECRET,
-    );
+    event = stripe.webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
@@ -61,11 +91,33 @@ export const handleStripeWebhook = async (req, res) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const orderId = session.metadata?.orderId;
-
     if (orderId) {
       const order = await Order.findById(orderId);
       await finalizeStripeOrder(order, session.payment_intent);
     }
+  }
+
+  if (event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object;
+    const orderId = session.metadata?.orderId;
+    if (orderId) {
+      const order = await Order.findById(orderId);
+      await markOrderFailed(order, "Async payment failed");
+    }
+  }
+
+  if (event.type === "checkout.session.expired") {
+    const session = event.data.object;
+    const orderId = session.metadata?.orderId;
+    if (orderId) {
+      const order = await Order.findById(orderId);
+      await markOrderFailed(order, "Checkout session expired");
+    }
+  }
+
+  if (event.type === "refund.updated") {
+    const refund = event.data.object;
+    await syncRefund(refund);
   }
 
   res.json({ received: true });

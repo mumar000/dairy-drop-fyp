@@ -6,6 +6,8 @@ import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
 import { env } from "../config/env.js";
 import { finalizeStripeOrder } from "./webhook.controller.js";
+import { Notification } from "../models/notification.model.js";
+import { refundReviewSchema } from "../validators/order.schema.js";
 
 export const createCheckoutSession = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -133,7 +135,9 @@ export const createCheckoutSession = asyncHandler(async (req, res) => {
       success_url: `${env.CLIENT_URL_SUCCESS}${
         env.CLIENT_URL_SUCCESS.includes("?") ? "&" : "?"
       }session_id={CHECKOUT_SESSION_ID}&stripe=success`,
-      cancel_url: env.CLIENT_URL_CANCEL,
+      cancel_url: `${env.CLIENT_URL_CANCEL}${
+        env.CLIENT_URL_CANCEL.includes("?") ? "&" : "?"
+      }stripe=cancelled`,
       metadata: {
         orderId: String(order._id),
         userId: String(user._id),
@@ -157,7 +161,9 @@ export const verifyCheckoutSession = asyncHandler(async (req, res) => {
   const orderId = session.metadata?.orderId;
 
   if (!orderId) {
-    return res.status(400).json({ message: "Stripe session is missing order metadata" });
+    return res
+      .status(400)
+      .json({ message: "Stripe session is missing order metadata" });
   }
 
   const order = await Order.findOne({
@@ -177,4 +183,105 @@ export const verifyCheckoutSession = asyncHandler(async (req, res) => {
     order,
     paymentStatus: session.payment_status,
   });
+});
+
+export const markCheckoutSessionFailed = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const orderId = session.metadata?.orderId;
+
+  if (!orderId) {
+    return res.status(400).json({ message: "Stripe session is missing order metadata" });
+  }
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: req.user.id,
+  });
+
+  if (!order) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+
+  if (order.paymentStatus === "Unpaid") {
+    order.paymentStatus = "Failed";
+    order.paymentFailureReason = "Customer cancelled or payment was not completed";
+    await order.save();
+  }
+
+  res.json({ order });
+});
+
+export const adminApproveRefundRequest = asyncHandler(async (req, res) => {
+  const { note } = refundReviewSchema.parse(req.body);
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ message: "Order not found" });
+
+  if (order.paymentMethod !== "Stripe") {
+    return res.status(400).json({ message: "Only Stripe orders can be refunded" });
+  }
+
+  if (order.paymentStatus !== "RefundRequested") {
+    return res.status(400).json({ message: "This order does not have a pending refund request" });
+  }
+
+  if (!order.stripePaymentIntentId) {
+    return res.status(400).json({ message: "Missing Stripe payment intent ID" });
+  }
+
+  const refund = await stripe.refunds.create({
+    payment_intent: order.stripePaymentIntentId,
+    reason: order.refundReason || "requested_by_customer",
+    metadata: {
+      orderId: String(order._id),
+    },
+  });
+
+  order.paymentStatus = refund.status === "succeeded" ? "Refunded" : "RefundPending";
+  order.stripeRefundId = refund.id;
+  order.refundReviewedAt = new Date();
+  order.refundReviewedBy = req.user.id;
+  order.refundAdminNote = note || "Refund approved";
+  order.refundedAt = refund.status === "succeeded" ? new Date() : undefined;
+  await order.save();
+
+  await Notification.create({
+    type: "refund_approved",
+    title: "Refund approved",
+    message: `Your refund request for order ${order._id} was approved.`,
+    order: order._id,
+    actor: req.user.id,
+    recipientRole: "user",
+  });
+
+  res.json({ order, refund });
+});
+
+export const adminRejectRefundRequest = asyncHandler(async (req, res) => {
+  const { note } = refundReviewSchema.parse(req.body);
+
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ message: "Order not found" });
+
+  if (order.paymentStatus !== "RefundRequested") {
+    return res.status(400).json({ message: "This order does not have a pending refund request" });
+  }
+
+  order.paymentStatus = "RefundRejected";
+  order.refundReviewedAt = new Date();
+  order.refundReviewedBy = req.user.id;
+  order.refundAdminNote = note || "Refund request rejected";
+  await order.save();
+
+  await Notification.create({
+    type: "refund_rejected",
+    title: "Refund request rejected",
+    message: `Your refund request for order ${order._id} was rejected.`,
+    order: order._id,
+    actor: req.user.id,
+    recipientRole: "user",
+  });
+
+  res.json({ order });
 });

@@ -1,8 +1,9 @@
 import { asyncHandler } from '../utils/async-handler.js';
-import { placeOrderSchema, updateStatusSchema } from '../validators/order.schema.js';
+import { placeOrderSchema, refundOrderSchema, updateStatusSchema } from '../validators/order.schema.js';
 import { Order } from '../models/order.model.js';
 import { User } from '../models/user.model.js';
 import { Product } from '../models/product.model.js';
+import { Notification } from '../models/notification.model.js';
 
 export const placeOrder = asyncHandler(async (req, res) => {
   const { address, items, fromCart } = placeOrderSchema.parse(req.body);
@@ -102,7 +103,7 @@ export const getOrder = asyncHandler(async (req, res) => {
 });
 
 export const adminListOrders = asyncHandler(async (_req, res) => {
-  const orders = await Order.find().sort('-createdAt');
+  const orders = await Order.find().populate('user', 'name email phone').sort('-createdAt');
   res.json({ orders });
 });
 
@@ -111,7 +112,9 @@ export const adminUpdateStatus = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ message: 'Order not found' });
   order.status = status;
-  if (status === 'Delivered') order.paymentStatus = 'Paid';
+  if (status === 'Delivered' && order.paymentMethod === 'COD' && order.paymentStatus === 'Unpaid') {
+    order.paymentStatus = 'Paid';
+  }
   await order.save();
   res.json({ order });
 });
@@ -126,5 +129,39 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
   for (const item of order.items) {
     await Product.updateOne({ _id: item.product }, { $inc: { inStock: item.quantity } });
   }
+  res.json({ order });
+});
+
+export const requestRefund = asyncHandler(async (req, res) => {
+  const { reason } = refundOrderSchema.parse(req.body);
+
+  const order = await Order.findOne({ _id: req.params.id, user: req.user.id });
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+
+  if (order.paymentMethod !== 'Stripe') {
+    return res.status(400).json({ message: 'Refund requests are only available for Stripe orders' });
+  }
+
+  if (order.paymentStatus !== 'Paid') {
+    return res.status(400).json({ message: 'Only paid orders can request a refund' });
+  }
+
+  order.paymentStatus = 'RefundRequested';
+  order.refundReason = reason;
+  order.refundRequestedAt = new Date();
+  order.refundReviewedAt = undefined;
+  order.refundReviewedBy = undefined;
+  order.refundAdminNote = undefined;
+  await order.save();
+
+  await Notification.create({
+    type: 'refund_request',
+    title: 'New refund request',
+    message: `Order ${order._id} was submitted for refund review.`,
+    order: order._id,
+    actor: req.user.id,
+    recipientRole: 'admin',
+  });
+
   res.json({ order });
 });

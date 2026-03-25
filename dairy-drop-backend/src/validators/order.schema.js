@@ -25,3 +25,11 @@ export const placeOrderSchema = z.object({
 export const updateStatusSchema = z.object({
   status: z.enum(['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled']),
 });
+
+export const refundOrderSchema = z.object({
+  reason: z.enum(['duplicate', 'fraudulent', 'requested_by_customer']).default('requested_by_customer'),
+});
+
+export const refundReviewSchema = z.object({
+  note: z.string().trim().max(500).optional().default(""),
+});
