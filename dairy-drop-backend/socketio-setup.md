@@ -1,22 +1,59 @@
 # Socket.IO Setup For Admin Notifications
 
-This document explains how Socket.IO is added locally for learning and practice in `dairy-drop-fyp`.
+This document explains how Socket.IO is added to `dairy-drop-fyp` only for local learning and practice.
 
-## Goal
+It is not the core production notification system.
 
-Socket.IO is used only as a local realtime enhancement for admin notifications.
+The real source of truth remains:
 
-The real application still works without it because polling remains the fallback.
+- MongoDB notification records
+- normal API endpoints
+- polling in admin frontend
 
-This means:
+Socket.IO is used only as a realtime enhancement during local development.
 
-- local development can show live admin notifications
-- deployed Vercel app may not support the socket server reliably
-- refund requests and notifications still work through normal API + polling
+---
 
-## Packages
+## Why We Are Adding Socket.IO
+
+The project already supports refund-request notifications by saving them in MongoDB and showing them in the admin bell through polling.
+
+That works well in production.
+
+But if we want to practice realtime communication, we can add Socket.IO so that:
+
+- when a user requests a refund
+- backend emits a realtime event
+- admin frontend receives it immediately
+- admin bell updates instantly without waiting for polling interval
+
+This is useful for learning:
+
+- websocket-style communication
+- rooms
+- emitting events from controllers
+- listening to events in React
+- combining realtime with persistent database state
+
+---
+
+## Important Practical Rule
+
+For this project:
+
+- MongoDB notification is the real truth
+- polling is the production-safe fallback
+- Socket.IO is only a local realtime helper
+
+This means if Socket.IO fails in production, nothing important breaks.
+
+---
+
+## Installation
 
 ### Backend
+
+Run inside `dairy-drop-backend`:
 
 ```bash
 npm install socket.io

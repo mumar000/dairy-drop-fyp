@@ -8,6 +8,7 @@ import { env } from "../config/env.js";
 import { finalizeStripeOrder } from "./webhook.controller.js";
 import { Notification } from "../models/notification.model.js";
 import { refundReviewSchema } from "../validators/order.schema.js";
+import { getIo } from "../socket/index.js";
 
 export const createCheckoutSession = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -192,7 +193,9 @@ export const markCheckoutSessionFailed = asyncHandler(async (req, res) => {
   const orderId = session.metadata?.orderId;
 
   if (!orderId) {
-    return res.status(400).json({ message: "Stripe session is missing order metadata" });
+    return res
+      .status(400)
+      .json({ message: "Stripe session is missing order metadata" });
   }
 
   const order = await Order.findOne({
@@ -206,7 +209,8 @@ export const markCheckoutSessionFailed = asyncHandler(async (req, res) => {
 
   if (order.paymentStatus === "Unpaid") {
     order.paymentStatus = "Failed";
-    order.paymentFailureReason = "Customer cancelled or payment was not completed";
+    order.paymentFailureReason =
+      "Customer cancelled or payment was not completed";
     await order.save();
   }
 
@@ -219,15 +223,21 @@ export const adminApproveRefundRequest = asyncHandler(async (req, res) => {
   if (!order) return res.status(404).json({ message: "Order not found" });
 
   if (order.paymentMethod !== "Stripe") {
-    return res.status(400).json({ message: "Only Stripe orders can be refunded" });
+    return res
+      .status(400)
+      .json({ message: "Only Stripe orders can be refunded" });
   }
 
   if (order.paymentStatus !== "RefundRequested") {
-    return res.status(400).json({ message: "This order does not have a pending refund request" });
+    return res
+      .status(400)
+      .json({ message: "This order does not have a pending refund request" });
   }
 
   if (!order.stripePaymentIntentId) {
-    return res.status(400).json({ message: "Missing Stripe payment intent ID" });
+    return res
+      .status(400)
+      .json({ message: "Missing Stripe payment intent ID" });
   }
 
   const refund = await stripe.refunds.create({
@@ -238,7 +248,8 @@ export const adminApproveRefundRequest = asyncHandler(async (req, res) => {
     },
   });
 
-  order.paymentStatus = refund.status === "succeeded" ? "Refunded" : "RefundPending";
+  order.paymentStatus =
+    refund.status === "succeeded" ? "Refunded" : "RefundPending";
   order.stripeRefundId = refund.id;
   order.refundReviewedAt = new Date();
   order.refundReviewedBy = req.user.id;
@@ -255,6 +266,21 @@ export const adminApproveRefundRequest = asyncHandler(async (req, res) => {
     recipientRole: "user",
   });
 
+  try {
+    const io = getIo();
+
+    io.to("admins").emit("admin-notification-update", {
+      type: "refund_approved",
+      title: "Refund approved",
+      message: `Refund approved for order ${order._id}.`,
+      orderId: String(order._id),
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    // ignore when socket server is not available
+    console.log(error);
+  }
+
   res.json({ order, refund });
 });
 
@@ -265,7 +291,9 @@ export const adminRejectRefundRequest = asyncHandler(async (req, res) => {
   if (!order) return res.status(404).json({ message: "Order not found" });
 
   if (order.paymentStatus !== "RefundRequested") {
-    return res.status(400).json({ message: "This order does not have a pending refund request" });
+    return res
+      .status(400)
+      .json({ message: "This order does not have a pending refund request" });
   }
 
   order.paymentStatus = "RefundRejected";
@@ -282,6 +310,21 @@ export const adminRejectRefundRequest = asyncHandler(async (req, res) => {
     actor: req.user.id,
     recipientRole: "user",
   });
+
+  try {
+    const io = getIo();
+
+    io.to("admins").emit("admin-notification-update", {
+      type: "refund_rejected",
+      title: "Refund rejected",
+      message: `Refund rejected for order ${order._id}.`,
+      orderId: String(order._id),
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    // ignore when socket server is not available
+    console.log(error);
+  }
 
   res.json({ order });
 });
