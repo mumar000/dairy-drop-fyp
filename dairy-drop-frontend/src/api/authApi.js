@@ -1,63 +1,74 @@
-import { baseApi } from './baseApi.js'
+import { baseApi } from "./baseApi.js";
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation({
-      query: (data) => ({ url: '/auth/register', method: 'POST', body: data }),
-      invalidatesTags: ['Me'],
+      query: (data) => ({ url: "/auth/register", method: "POST", body: data }),
+      invalidatesTags: ["Me"],
     }),
     login: builder.mutation({
-      query: (data) => ({ url: '/auth/login', method: 'POST', body: data }),
-      invalidatesTags: ['Me'],
+      query: (data) => ({ url: "/auth/login", method: "POST", body: data }),
+      invalidatesTags: ["Me"],
+    }),
+    googleLogin: builder.query({
+      query: () => ({
+        url: "/auth/google",
+        method: "GET",
+        redirect: "follow", // Important for OAuth redirect
+      }),
     }),
     me: builder.query({
-      query: () => ({ url: '/auth/me' }),
-      providesTags: ['Me'],
+      query: () => ({ url: "/auth/me" }),
+      providesTags: ["Me"],
     }),
     updateProfile: builder.mutation({
       query: (data) => ({
         url: "/auth/me",
         method: "PATCH",
-        body: data
+        body: data,
       }),
-      invalidatesTags: ["Me"]
+      invalidatesTags: ["Me"],
     }),
     changePassword: builder.mutation({
-      query: (data) => ({ url: '/auth/change-password', method: 'POST', body: data }),
+      query: (data) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body: data,
+      }),
     }),
     getUser: builder.query({
-      query: () => ({ url: '/auth/me' }),
-      providesTags: ['Me'],
+      query: () => ({ url: "/auth/me" }),
+      providesTags: ["Me"],
     }),
     listAddresses: builder.query({
-      query: () => ({ url: '/auth/addresses' }),
-      providesTags: ['Me'],
+      query: () => ({ url: "/auth/addresses" }),
+      providesTags: ["Me"],
     }),
     addAddress: builder.mutation({
       query: (data) => ({
-        url: '/auth/addresses',
-        method: 'POST',
-        body: data
+        url: "/auth/addresses",
+        method: "POST",
+        body: data,
       }),
-      invalidatesTags: ['Me'],
+      invalidatesTags: ["Me"],
     }),
     updateAddress: builder.mutation({
       query: ({ id, ...data }) => ({
         url: `/auth/addresses/${id}`,
-        method: 'PATCH',
-        body: data
+        method: "PATCH",
+        body: data,
       }),
-      invalidatesTags: ['Me'],
+      invalidatesTags: ["Me"],
     }),
     deleteAddress: builder.mutation({
       query: (id) => ({
         url: `/auth/addresses/${id}`,
-        method: 'DELETE'
+        method: "DELETE",
       }),
-      invalidatesTags: ['Me'],
+      invalidatesTags: ["Me"],
     }),
   }),
-})
+});
 
 export const {
   useRegisterMutation,
@@ -70,4 +81,5 @@ export const {
   useAddAddressMutation,
   useUpdateAddressMutation,
   useDeleteAddressMutation,
-} = authApi
+  useGoogleLoginQuery
+} = authApi;

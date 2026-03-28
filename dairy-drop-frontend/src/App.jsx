@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout.jsx"
 import Orders from "./pages/Orders.jsx"
 import NavBar from "./components/NavBar.jsx"
 import { useSyncCartWithStore } from "./hooks/useSyncCartWithStore.js"
+import OAuthSuccess from "./pages/OAuthSuccess.jsx"
 
 // Wrapper component to load cart data
 function AppContent() {
@@ -73,6 +74,7 @@ function AppContent() {
         />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
         <Route
           path="/admin/dashboard"
           element={
