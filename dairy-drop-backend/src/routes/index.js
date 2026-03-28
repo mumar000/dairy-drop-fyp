@@ -11,6 +11,7 @@ const router = Router();
 
 router.use('/health', healthRouter);
 router.use('/auth', authRouter);
+router.use("/api/auth", authRouter);
 router.use('/products', productRouter);
 router.use('/reviews', reviewRouter);
 router.use('/orders', orderRouter);

@@ -16,6 +16,8 @@ import {
   removeCartItem,
   clearCart,
 } from '../controllers/auth.controller.js';
+import { googleLogin } from '../controllers/auth.controller.js';
+import { googleCallback } from '../controllers/auth.controller.js';
 
 const router = Router();
 
@@ -24,6 +26,9 @@ router.post('/login', login);
 router.get('/me', authenticate, me);
 router.patch('/me', authenticate, updateProfile);
 router.post('/change-password', authenticate, changePassword);
+
+router.get("/google", googleLogin)
+router.get("/google/callback", googleCallback)
 
 router.get('/addresses', authenticate, listAddresses);
 router.post('/addresses', authenticate, addAddress);
